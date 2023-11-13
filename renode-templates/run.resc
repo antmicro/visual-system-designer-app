@@ -1,0 +1,13 @@
+$name?="{board_name}"
+using sysbus
+mach create $name
+
+machine LoadPlatformDescription @{repl_path}
+$bin = @{elf_path}
+showAnalyzer {console}
+
+macro reset
+"""
+    sysbus LoadELF $bin
+"""
+runMacro $reset

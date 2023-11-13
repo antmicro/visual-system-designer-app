@@ -1,0 +1,117 @@
+# Visual System Designer
+
+Copyright (c) 2023 [Antmicro](https://www.antmicro.com)
+
+The Visual System Designer app is a local multi-tool which incorporates the diagramming capabilities of the online [Visual System Designer](https://designer.antmicro.com/) which can be used for building block design of embedded systems in a diagramming workflow.
+
+The tool can also be used to generate and build [Zephyr RTOS](https://zephyrproject.org/)-based firmware and simulate it using [Renode](https://www.renode.io), Antmicro's open source simulation framework, visualizing the state of the simulation.
+
+## Prerequisites
+
+The VSD application currently depends on other projects: kenning-pipeline-manager, Zephyr and Renode, therefore their dependencies must be installed first.
+Make sure that you have installed all the programs mentioned below.
+Any other dependencies (e.g. Python requirements or Zephyr workspace) will be downloaded later by the setup script.
+
+(the following package names are for Debian based systems)
+
+* [Pipeline Manager dependencies](https://github.com/antmicro/kenning-pipeline-manager#prerequisites)
+
+  ```
+  npm python3 python3-pip
+  ```
+* [Zephyr dependencies](https://docs.zephyrproject.org/latest/develop/getting_started/index.html#install-dependencies)
+
+  ```
+  git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget python3-dev python3-pip python3-setuptools \
+  python3-tk python3-wheel xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1
+  ```
+* [Renode dependencies](https://github.com/renode/renode#installing-dependencies)
+
+  ```
+  mono-complete
+  ```
+
+NOTE: On Arch based systems additionally the `gtk-sharp` package must be installed to successfully run Renode.
+
+## Setup
+
+To setup the workspace run:
+
+```
+./setup.sh
+```
+
+After the setup is finished, the VSD environment must be activated by sourcing the script created in `workspace` directory.
+This file must be sourced in every shell that will be used to run the VSD application.
+
+```
+source workspace/vsd-env.sh
+```
+
+## Starting the VSD application
+
+The most convenient way to run VSD is to use it interactively:
+
+```
+./vsd.py run
+```
+
+After running this command the VSD server will start and the application can be used in a web browser (by default at http://localhost:9000).
+It can be used to design a graph of the platform, build an example Zephyr application on designed platform and run it in simulation using Renode.
+
+To adjust the options used to start the VSD application use the following options (those can be listed with `--help`):
+
+```
+Usage: vsd.py run [OPTIONS]
+
+Options:
+  --application PATH          [default: demo/blinky-temperature]
+  --workspace PATH            [default: workspace]
+  --templates-dir PATH        [default: renode-templates]
+  --website-host TEXT         [default: 127.0.0.1]
+  --website-port INTEGER      [default: 9000]
+  --vsd-backend-host TEXT     [default: 127.0.0.1]
+  --vsd-backend-port INTEGER  [default: 5000]
+  --verbosity TEXT            [default: WARNING]
+```
+
+## Using the VSD application
+
+After the VSD application is launched it can be used to design graphs.
+Graphs can either be designed from scratch or from another graph imported using the "Load graph file" option.
+
+Visual System Designer is also capable of running a Zephyr demo application based on the created graphs.
+
+To build Zephyr on the current graph use the "Build" button.
+After the build has succeeded, simulation may be run using the "Run simulation" button.
+The build logs and Zephyr console output are available in dedicated terminals on the bottom of the screen.
+
+## Using VSD from command line
+
+VSD can be also used as a command line utility to execute each step of the application build process separately, without the need to start the VSD server.
+These commands can be used when you have obtained a graph from another source (e.g. from [designer.antmicro.com](https://designer.antmicro.com) or using `./vsd.py run`).
+
+Available commands:
+
+- `prepare-zephyr-board` -- prepare Zephyr board configuration based on given graph
+- `build-zephyr` -- build Zephyr for board of given name (previously prepared from graph)
+- `prepare-renode-files` -- prepare Renode files needed to run simulation using build results
+- `simulate` -- start simulation of prepared application
+
+To get more information about arguments and options for each command run it with `./vsd.py run --help` option.
+
+## Example application
+
+The VSD app comes with its own Zephyr demo ([demo/blinky-temperature](./demo/blinky-temperature/)) which can be used on a predefined graph ([stm32-led-thermometer.json](./demo/stm32-led-thermometer.json)).
+To build that demo you can start the VSD app and import the graph, or execute following commands in terminal:
+
+```
+./vsd.py prepare-zephyr-board demo/stm32-led-thermometer.json
+./vsd.py build-zephyr demo-blinky-temp --app-path demo/blinky-temperature
+./vsd.py prepare-renode-files demo-blinky-temp
+./vsd.py simulate demo-blinky-temp
+```
+
+## License
+
+This project is published under the [Apache-2.0](LICENSE) license.

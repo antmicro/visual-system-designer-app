@@ -1,0 +1,357 @@
+{
+    "graph": {
+        "id": "5f7206e9-758b-4d5f-9df3-854364634101",
+        "name": "demo-blinky-temp",
+        "nodes": [
+            {
+                "id": "930e3742-5a9f-4568-9472-efa29752f92d",
+                "position": {
+                    "x": 800,
+                    "y": 700
+                },
+                "width": 200,
+                "twoColumn": true,
+                "interfaces": [
+                    {
+                        "name": "adc1",
+                        "id": "82daf895-4ada-444d-b178-288633defbbf",
+                        "direction": "inout",
+                        "side": "left",
+                        "sidePosition": 0
+                    },
+                    {
+                        "name": "flash",
+                        "id": "c62b0d2b-7814-4a2e-b629-60bb030d9967",
+                        "direction": "inout",
+                        "side": "left",
+                        "sidePosition": 1
+                    },
+                    {
+                        "name": "gpiob",
+                        "id": "3f0d7b99-752b-4c91-9aed-241d6c3982e1",
+                        "direction": "inout",
+                        "side": "left",
+                        "sidePosition": 2
+                    },
+                    {
+                        "name": "gpiod",
+                        "id": "4fb02ee7-7dcc-41cc-9c5a-fee4b024b0b4",
+                        "direction": "inout",
+                        "side": "left",
+                        "sidePosition": 3
+                    },
+                    {
+                        "name": "i2c1",
+                        "id": "16deefb9-37d3-4a3d-9c99-f00d0b9e9f2c",
+                        "direction": "inout",
+                        "side": "left",
+                        "sidePosition": 4
+                    },
+                    {
+                        "name": "lpuart1",
+                        "id": "b2928848-3081-4be2-ab53-838be70a324f",
+                        "direction": "inout",
+                        "side": "left",
+                        "sidePosition": 5
+                    },
+                    {
+                        "name": "pwm",
+                        "id": "83a51f16-8dcb-4450-963e-6a21ca8533ac",
+                        "direction": "inout",
+                        "side": "left",
+                        "sidePosition": 6
+                    },
+                    {
+                        "name": "pwm-2",
+                        "id": "db33ab7b-5161-4e01-83c7-0e95c42e3fa0",
+                        "direction": "inout",
+                        "side": "left",
+                        "sidePosition": 7
+                    },
+                    {
+                        "name": "spi2",
+                        "id": "0c8b2131-ce63-4feb-8009-c7586335bb36",
+                        "direction": "inout",
+                        "side": "left",
+                        "sidePosition": 8
+                    },
+                    {
+                        "name": "usart2",
+                        "id": "b2fe6528-89eb-49ce-92d2-85aacf008988",
+                        "direction": "inout",
+                        "side": "left",
+                        "sidePosition": 9
+                    },
+                    {
+                        "name": "dac1",
+                        "id": "0e593338-e598-4725-9251-413452931e95",
+                        "direction": "inout",
+                        "side": "right",
+                        "sidePosition": 0
+                    },
+                    {
+                        "name": "gpioa",
+                        "id": "e789000f-45b2-4bad-b98c-411d83f7be6f",
+                        "direction": "inout",
+                        "side": "right",
+                        "sidePosition": 1
+                    },
+                    {
+                        "name": "gpioc",
+                        "id": "eb53ad25-95cd-48ab-9320-c6e0fdc322db",
+                        "direction": "inout",
+                        "side": "right",
+                        "sidePosition": 2
+                    },
+                    {
+                        "name": "gpioh",
+                        "id": "d8272f68-5e6e-4bc3-aa5f-264b5cf559e1",
+                        "direction": "inout",
+                        "side": "right",
+                        "sidePosition": 3
+                    },
+                    {
+                        "name": "i2c2",
+                        "id": "dbb8e593-c7db-4b8e-837a-66103ff6b139",
+                        "direction": "inout",
+                        "side": "right",
+                        "sidePosition": 4
+                    },
+                    {
+                        "name": "pinctrl",
+                        "id": "8f904417-7dfe-4a5c-b2d9-23637f2efc5f",
+                        "direction": "inout",
+                        "side": "right",
+                        "sidePosition": 5
+                    },
+                    {
+                        "name": "pwm-1",
+                        "id": "59227c61-1d8d-4ad5-a67f-35f2fdaab0bf",
+                        "direction": "inout",
+                        "side": "right",
+                        "sidePosition": 6
+                    },
+                    {
+                        "name": "spi1",
+                        "id": "a0555b7c-1217-4aca-a5fd-eb7ec30706a4",
+                        "direction": "inout",
+                        "side": "right",
+                        "sidePosition": 7
+                    },
+                    {
+                        "name": "usart1",
+                        "id": "878b9abd-ccb1-46a3-ac22-9886ca958f03",
+                        "direction": "inout",
+                        "side": "right",
+                        "sidePosition": 8
+                    },
+                    {
+                        "name": "usb",
+                        "id": "b83e9523-f640-47a6-9b56-88388ef63754",
+                        "direction": "inout",
+                        "side": "right",
+                        "sidePosition": 9
+                    }
+                ],
+                "properties": [],
+                "enabledInterfaceGroups": [],
+                "name": "stm32l053r8t6",
+                "instanceName": "stm32l053r8t6"
+            },
+            {
+                "id": "50393e0a-bfd9-46c3-bd54-c32ce0288a86",
+                "position": {
+                    "x": 200,
+                    "y": 600
+                },
+                "width": 200,
+                "twoColumn": true,
+                "interfaces": [
+                    {
+                        "name": "alert",
+                        "id": "dc6190eb-e197-497a-ab46-cf73cbad35aa",
+                        "direction": "inout",
+                        "side": "right",
+                        "sidePosition": 1
+                    },
+                    {
+                        "name": "i2c",
+                        "id": "dfce1a40-f369-42c1-8d58-b01ba0a52b7d",
+                        "direction": "inout",
+                        "side": "right",
+                        "sidePosition": 0
+                    }
+                ],
+                "properties": [
+                    {
+                        "name": "address (i2c)",
+                        "id": "67a05782-dc73-4d55-b798-822342c3eb20",
+                        "value": "0x18"
+                    }
+                ],
+                "enabledInterfaceGroups": [],
+                "name": "tmp108",
+                "instanceName": "tmp108"
+            },
+            {
+                "id": "d2871700-5270-4ef8-9b88-a689df14bba2",
+                "position": {
+                    "x": 200,
+                    "y": 900
+                },
+                "width": 200,
+                "twoColumn": true,
+                "interfaces": [
+                    {
+                        "name": "i2c",
+                        "id": "4a9e1654-1691-4464-8c52-5692292f1320",
+                        "direction": "inout",
+                        "side": "right",
+                        "sidePosition": 0
+                    }
+                ],
+                "properties": [
+                    {
+                        "name": "address (i2c)",
+                        "id": "efc349db-3f2d-45c1-ae02-6cbfe3a48bef",
+                        "value": "0x30"
+                    }
+                ],
+                "enabledInterfaceGroups": [],
+                "name": "Silicon Labs SI7210-B-00-IVR",
+                "instanceName": "Silicon Labs SI7210-B-00-IVR"
+            },
+            {
+                "id": "3d3fb00d-0a64-477f-abf9-3cb017b93ab0",
+                "position": {
+                    "x": 1400,
+                    "y": 430
+                },
+                "width": 200,
+                "twoColumn": true,
+                "interfaces": [
+                    {
+                        "name": "gpio",
+                        "id": "d33c1500-f3c9-45a1-a30e-f063223540be",
+                        "direction": "inout",
+                        "side": "left",
+                        "sidePosition": 0
+                    }
+                ],
+                "properties": [
+                    {
+                        "name": "address (gpio)",
+                        "id": "09ebbc50-59a9-4800-9181-26cebaf9d980",
+                        "value": "0x0"
+                    },
+                    {
+                        "name": "active",
+                        "id": "78bbd624-d2c3-488b-8224-7886d6700bad",
+                        "value": false
+                    }
+                ],
+                "enabledInterfaceGroups": [],
+                "name": "Lite-On LTST-C190KGKT",
+                "instanceName": "Lite-On LTST-C190KGKT"
+            },
+            {
+                "id": "5dfc9630-37f4-4c98-99e8-c1f0b2395fc2",
+                "position": {
+                    "x": 1400,
+                    "y": 670
+                },
+                "width": 200,
+                "twoColumn": true,
+                "interfaces": [
+                    {
+                        "name": "gpio",
+                        "id": "a7839926-7428-4d2e-9017-31be11f1b8ab",
+                        "direction": "inout",
+                        "side": "left",
+                        "sidePosition": 0
+                    }
+                ],
+                "properties": [
+                    {
+                        "name": "address (gpio)",
+                        "id": "331a09b7-777a-4d68-8492-fc3400fe4f92",
+                        "value": "0x1"
+                    },
+                    {
+                        "name": "active",
+                        "id": "349c9106-a348-4449-84aa-75feeb0fea5f",
+                        "value": false
+                    }
+                ],
+                "enabledInterfaceGroups": [],
+                "name": "Lite-On LTST-C190KRKT",
+                "instanceName": "Lite-On LTST-C190KRKT"
+            },
+            {
+                "id": "c0cf7a03-dd38-475d-9b06-d0112cf5c7a2",
+                "position": {
+                    "x": 1400,
+                    "y": 1000
+                },
+                "width": 200,
+                "twoColumn": true,
+                "interfaces": [
+                    {
+                        "name": "gpio",
+                        "id": "4c827fdb-280c-4743-99b3-3e47dbd260d4",
+                        "direction": "inout",
+                        "side": "left",
+                        "sidePosition": 0
+                    }
+                ],
+                "properties": [
+                    {
+                        "name": "address (gpio)",
+                        "id": "d53e9875-a773-41af-bad9-8964a5ca00d5",
+                        "value": "0x0"
+                    },
+                    {
+                        "name": "active",
+                        "id": "77d38421-57e9-4fff-9a8d-497eb064a170",
+                        "value": false
+                    }
+                ],
+                "enabledInterfaceGroups": [],
+                "name": "Vishay VLMY1500-GS08",
+                "instanceName": "Vishay VLMY1500-GS08"
+            }
+        ],
+        "connections": [
+            {
+                "id": "c96c0fe1-1088-42bf-847b-68637b5c558b",
+                "from": "dfce1a40-f369-42c1-8d58-b01ba0a52b7d",
+                "to": "16deefb9-37d3-4a3d-9c99-f00d0b9e9f2c"
+            },
+            {
+                "id": "b0722736-50af-436e-a342-af542fd7d619",
+                "from": "4a9e1654-1691-4464-8c52-5692292f1320",
+                "to": "16deefb9-37d3-4a3d-9c99-f00d0b9e9f2c"
+            },
+            {
+                "id": "f5022bbf-6e3a-42da-8b98-30c3b2089f46",
+                "from": "d33c1500-f3c9-45a1-a30e-f063223540be",
+                "to": "e789000f-45b2-4bad-b98c-411d83f7be6f"
+            },
+            {
+                "id": "37d9383e-fa0e-46df-807d-689380fe00e5",
+                "from": "a7839926-7428-4d2e-9017-31be11f1b8ab",
+                "to": "e789000f-45b2-4bad-b98c-411d83f7be6f"
+            },
+            {
+                "id": "6a80c2b1-6486-498a-881e-301534992516",
+                "from": "4c827fdb-280c-4743-99b3-3e47dbd260d4",
+                "to": "d8272f68-5e6e-4bc3-aa5f-264b5cf559e1"
+            }
+        ]
+    },
+    "version": "20230830.11",
+    "metadata": {
+        "movementStep": 10,
+        "randomizedOffset": false
+    }
+}
