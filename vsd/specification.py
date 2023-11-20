@@ -58,3 +58,10 @@ class Specification():
                 else:
                     logging.warning(f"Not found the extend node: {ext_name}")
         return node
+
+    def get_socs(self):
+        soc_names = []
+        for name, node in self.categories.items():
+            if node['category'].startswith("SoC"):
+                soc_names.append(name)
+        return soc_names
