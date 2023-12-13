@@ -6,6 +6,10 @@ The Visual System Designer app is a local multi-tool which incorporates the diag
 
 The tool can also be used to generate and build [Zephyr RTOS](https://zephyrproject.org/)-based firmware and simulate it using [Renode](https://www.renode.io), Antmicro's open source simulation framework, visualizing the state of the simulation.
 
+## Demo
+
+https://github.com/antmicro/visual-system-designer-app/assets/114056459/9262c9db-82ad-4abf-ac39-a331427065c2
+
 ## Prerequisites
 
 The VSD application currently depends on other projects: kenning-pipeline-manager, Zephyr and Renode, therefore their dependencies must be installed first.
