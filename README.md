@@ -3,6 +3,7 @@
 Copyright (c) 2023 [Antmicro](https://www.antmicro.com)
 
 The Visual System Designer app is a local multi-tool which incorporates the diagramming capabilities of the online [Visual System Designer](https://designer.antmicro.com/) which can be used for building block design of embedded systems in a diagramming workflow.
+For more background on Visual System Designer and its goals, please read the [introductory blog note on Antmicro's blog](https://antmicro.com/blog/2023/09/build-embedded-systems-with-vsd/).
 
 The tool can also be used to generate and build [Zephyr RTOS](https://zephyrproject.org/)-based firmware and simulate it using [Renode](https://www.renode.io), Antmicro's open source simulation framework, visualizing the state of the simulation.
 
