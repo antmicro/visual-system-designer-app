@@ -1,0 +1,40 @@
+name: Validate setup
+on: push
+
+env:
+  WORKSPACE: workspace
+
+jobs:
+  validate-setup:
+    name: Validate setup
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get -qqy update
+          sudo apt-get -qqy purge mono-complete mono-runtime mono-devel
+          sudo apt-get -qqy autoremove
+          sudo apt-get -qqy install npm libarchive-tools curl git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev mono-complete=6.8.0.105+dfsg-2
+
+      - name: Prepare workspace
+        run: |
+          echo "progress=dot:giga" > ${HOME}/.wgetrc
+          ./setup.sh
+
+      - name: Build and run demo
+        run: |
+          source ${WORKSPACE}/vsd-env.sh
+          ./vsd.py prepare-zephyr-board demo/stm32-led-thermometer.json
+          ./vsd.py build-zephyr demo-blinky-temp
+          ./vsd.py prepare-renode-files demo-blinky-temp
+          timeout --signal=SIGINT 20 ./vsd.py simulate demo-blinky-temp || test $? -eq 124
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: workspace/builds/demo-blinky-temp
