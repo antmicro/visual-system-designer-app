@@ -1,5 +1,0 @@
-pyrenode3[all] @ git+https://github.com/antmicro/pyrenode3
-dts2repl @ git+https://github.com/antmicro/dts2repl.git
-pyyaml
-typer
-west

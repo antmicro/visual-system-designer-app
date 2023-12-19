@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Antmicro
+# Copyright (c) 2023-2024 Antmicro <www.antmicro.com>
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
@@ -13,8 +13,8 @@ import yaml
 
 from pathlib import Path
 
-from .parse_graph import Graph
-from .specification import Specification
+from vsd.graph import Graph
+from vsd.specification import Specification
 
 
 def _prep_kconfig_board(configs):

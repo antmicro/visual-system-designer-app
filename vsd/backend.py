@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Antmicro
+# Copyright (c) 2023-2024 Antmicro <www.antmicro.com>
 # SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
@@ -16,10 +16,10 @@ from typing import Dict
 from pipeline_manager_backend_communication.communication_backend import CommunicationBackend
 from pipeline_manager_backend_communication.misc_structures import MessageType
 
-from . import build
-from . import simulate
-from .specification import Specification
-from .parse_graph import Graph
+from vsd import build
+from vsd import simulate
+from vsd.specification import Specification
+from vsd.graph import Graph
 
 
 class RPCMethods:

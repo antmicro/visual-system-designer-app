@@ -1,10 +1,9 @@
-# Copyright (c) 2023 Antmicro
+# Copyright (c) 2023-2024 Antmicro <www.antmicro.com>
 # SPDX-License-Identifier: Apache-2.0
 
 import argparse
 import logging
 import re
-import shutil
 import sys
 
 from pathlib import Path

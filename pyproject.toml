@@ -1,0 +1,34 @@
+# Copyright (c) 2022-2024 Antmicro <www.antmicro.com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+[project]
+name = "visual-system-designer-app"
+version = "0.0.1"
+authors = [{name = "Antmicro Ltd.", email = "contact@antmicro.com"}]
+description = "Visual System Designer application"
+dependencies = [
+    "pipeline-manager @ git+https://github.com/antmicro/kenning-pipeline-manager",
+    "pipeline-manager-backend-communication @ git+https://github.com/antmicro/kenning-pipeline-manager-backend-communication",
+    "pyrenode3[all] @ git+https://github.com/antmicro/pyrenode3",
+    "dts2repl @ git+https://github.com/antmicro/dts2repl.git",
+    "pyyaml",
+    "typer",
+    "west",
+]
+
+requires-python = ">=3.9"
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+]
+
+[project.scripts]
+vsd = "vsd.__main__:main"
+
+[tool.setuptools.packages.find]
+include = [
+    "vsd",
+]
+namespaces = false
