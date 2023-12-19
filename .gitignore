@@ -1,1 +1,3 @@
 workspace
+build
+*.egg-info
