@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2023 Antmicro
+# Copyright (c) 2023-2024 Antmicro <www.antmicro.com>
 # SPDX-License-Identifier: Apache-2.0
 
 set -e
@@ -47,16 +47,12 @@ clone_or_update() {
 
 get_dependencies() {
   clone_or_update visual-system-designer-resources
-  clone_or_update kenning-pipeline-manager
-  clone_or_update kenning-pipeline-manager-backend-communication
 }
 
 install_requirements() {
   if [[ ! -e $VSDENV/installed ]]; then
-    echo -n "INFO: Installing VSD Python requirements"
-    pip3 install -r requirements.txt
-    pip3 install -e $WORKSPACE/kenning-pipeline-manager
-    pip3 install -e $WORKSPACE/kenning-pipeline-manager-backend-communication
+    echo "INFO: Installing VSD Python requirements"
+    pip3 install -e .
     touch $VSDENV/installed
   else
     echo "INFO: VSD Python requirements are marked as installed."
