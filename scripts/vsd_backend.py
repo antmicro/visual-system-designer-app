@@ -242,7 +242,8 @@ class VSDClient:
 
     async def _prepare_binaries(self, graph):
         """
-        Check if the application binaries are ready.
+        Check if the application binaries are ready. Build the application if
+        binaries are outdated or not found.
 
         Returns tuple of following values or None if failed:
             board_name: str
@@ -251,11 +252,29 @@ class VSDClient:
         board_name = re.sub('\s', '_', graph.name)
         build_dir = self.workspace / 'builds' / board_name
 
+        def up_to_date(path):
+            if not path.exists():
+                return False
+            ts = os.path.getmtime(str(path.absolute()))
+
+            logging.debug(f"Last graph change: {self.last_graph_change}")
+            logging.debug(f"File mtime: {datetime.fromtimestamp(ts)}")
+            return datetime.fromtimestamp(ts) > self.last_graph_change
+
         expect_binaries = {
             "repl": build_dir / f"{board_name}.repl",
             "elf": build_dir / "zephyr/zephyr.elf",
             "dts": build_dir / "zephyr/zephyr.dts",
         }
+
+        # If these files are up to date we can use them.
+        if all(map(up_to_date, expect_binaries.values())):
+            return board_name, expect_binaries
+
+        # If they are outdated, the application must be rebuilt.
+        ret = await self._build(graph, self.stop_build_event)
+        if not ret:
+            return None
 
         def must_exist(path):
             if path.exists():
@@ -266,6 +285,7 @@ class VSDClient:
 
         if all(map(must_exist, expect_binaries.values())):
             return board_name, expect_binaries
+
         return None
 
     async def handle_run(self, graph_json):
@@ -335,11 +355,21 @@ class VSDClient:
         return self._ok("Stopping simulation")
 
     async def handle_build(self, graph_json):
-        prepare_ret = self._prepare_build(graph_json)
-        if not prepare_ret:
+        graph = Graph(graph_json, self.specification)
+        build_ret = await self._build(graph, self.stop_build_event)
+        if build_ret:
+            return self._ok("Build succeeded.")
+        else:
             return self._error("Build failed.")
 
+    async def _build(self, graph, stop_event):
+        prepare_ret = self._prepare_build(graph)
+        if not prepare_ret:
+            return False
+
+        # Unpack the values returned from _prepare_build
         board_dir, board_name, command = prepare_ret
+
         logging.info(f"Zephyr board configuration prepared in: {board_dir}")
         logging.info(f"To build this demo manually use the following command:\n\t{command}")
 
@@ -349,27 +379,26 @@ class VSDClient:
         build_ret, build_dir = await build.build_zephyr_async(
             board_name,
             print_fun,
-            self.stop_build_event,
+            stop_event,
             self.app,
             self.workspace
         )
-        self.stop_build_event.clear()
+        stop_event.clear()
 
         if build_ret != 0:
             logging.error("Failed to build Zephyr.")
-            return self._error("Build failed.")
+            return False
 
         logging.info(f"Application build files available in {build_dir}")
 
         ret = simulate.prepare_renode_files(board_name, self.workspace, self.templates)
         if ret != 0:
             logging.error("Failed to create files needed by Renode.")
-            return self._error("Build failed.")
+            return False
 
-        return self._ok("Build succeeded.")
+        return True
 
-    def _prepare_build(self, graph_json):
-        graph = Graph(graph_json, self.specification)
+    def _prepare_build(self, graph):
         soc, connections = graph.get_soc_with_connections()
 
         soc_name = soc.rdp_name
