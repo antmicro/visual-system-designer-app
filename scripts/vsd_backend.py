@@ -201,30 +201,51 @@ class VSDClient:
 
         return terminal_callback
 
+    async def _prepare_binaries(self, graph):
+        """
+        Check if the application binaries are ready.
+
+        Returns tuple of following values or None if failed:
+            board_name: str
+            binaries: Dict
+        """
+        board_name = re.sub('\s', '_', graph.name)
+        build_dir = self.workspace / 'builds' / board_name
+
+        expect_binaries = {
+            "repl": build_dir / f"{board_name}.repl",
+            "elf": build_dir / "zephyr/zephyr.elf",
+            "dts": build_dir / "zephyr/zephyr.dts",
+        }
+
+        def must_exist(path):
+            if path.exists():
+                return True
+            else:
+                logging.error(f"The {path.name} hasn't been built.")
+                return False
+
+        if all(map(must_exist, expect_binaries.values())):
+            return board_name, expect_binaries
+        return None
+
     async def handle_run(self, graph_json):
         graph = Graph(graph_json, self.specification)
 
-        board_name = re.sub('\s', '_', graph.name)
-        build_dir = self.workspace / 'builds' / board_name
-        repl_path = build_dir / (board_name + '.repl')
-        elf_path = build_dir / 'zephyr/zephyr.elf'
-        dts_path = build_dir / 'zephyr/zephyr.dts'
+        prepare_ret = await self._prepare_binaries(graph)
+        if not prepare_ret:
+            return self._error("Simulation failed")
 
-        if not repl_path.exists():
-            logging.error(f"There is no {repl_path.name}. Did you forget to build the app?")
-            return self._error("Simulation failed.")
-
-        if not elf_path.exists():
-            logging.error(f"There is no {elf_path.name}. Did you forget to build the app?")
-            return self._error("Simulation failed.")
+        # Unpack the values returned from _prepare_binaries
+        board_name, binaries = prepare_ret
 
         try:
-            emu, machine = simulate.prepare_simulation(board_name, elf_path, repl_path)
+            emu, machine = simulate.prepare_simulation(board_name, binaries['elf'], binaries['repl'])
         except Exception as e:
-            logging.error(f"Simulation can't be prepared using {repl_path} and {elf_path}:\n\t{e}")
+            logging.error(f"Simulation can't be prepared using {binaries['repl']} and {binaries['elf']}:\n\t{e}")
             return self._error("Simulation failed.")
 
-        zephyr_console = simulate._find_chosen('zephyr,console', dts_path)
+        zephyr_console = simulate._find_chosen('zephyr,console', binaries['dts'])
 
         for uart, uart_name in simulate.get_all_uarts(machine):
             if uart_name == zephyr_console:
