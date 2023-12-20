@@ -11,6 +11,7 @@ import re
 import signal
 import sys
 
+from datetime import datetime
 from typing import Dict
 from pipeline_manager_backend_communication.communication_backend import CommunicationBackend
 from pipeline_manager_backend_communication.misc_structures import MessageType
@@ -59,6 +60,31 @@ class RPCMethods:
                 logging.warning(f"Unrecognized method: {method}")
         return self.vsd_client._ok("Stopped.")
 
+    def nodes_on_change(self, graph_id, nodes):
+        self.vsd_client.last_graph_change = datetime.now()
+        logging.debug(f"Last change: {self.vsd_client.last_graph_change}")
+
+    def properties_on_change(self,graph_id, node_id, properties):
+        self.vsd_client.last_graph_change = datetime.now()
+        logging.debug(f"Last change: {self.vsd_client.last_graph_change}")
+
+    def connections_on_change(self, graph_id, connections):
+        self.vsd_client.last_graph_change = datetime.now()
+        logging.debug(f"Last change: {self.vsd_client.last_graph_change}")
+
+    def graph_on_change(self, dataflow):
+        self.vsd_client.last_graph_change = datetime.now()
+        logging.debug(f"Last change: {self.vsd_client.last_graph_change}")
+
+    # XXX: The metadata_on_change and position_on_change events don't have to
+    #      be recorded. They aren't triggered by actions that modify the graph.
+
+    def metadata_on_change(self, metadata):
+        pass
+
+    def position_on_change(self, graph_id, node_id, position):
+        pass
+
 
 class VSDLogHandler(logging.Handler):
     def __init__(self, vsd_client: VSDClient):
@@ -85,6 +111,7 @@ class VSDClient:
         self.stop_simulation_event = asyncio.Event()
         self.stop_build_event = asyncio.Event()
         self._client = CommunicationBackend(host, port)
+        self.last_graph_change = datetime.now()
 
     async def start_listening(self):
         await self._client.initialize_client(RPCMethods(self))
@@ -149,6 +176,8 @@ class VSDClient:
                         "type": "bool"
                     }
                 )
+
+        self.specification.spec_json["metadata"]["notifyWhenChanged"] = True
 
         # Set custom buttons on navigation bar
         if "navbarItems" not in self.specification.spec_json["metadata"]:
