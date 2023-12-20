@@ -65,6 +65,14 @@ class RPCMethods:
         logging.debug(f"Last change: {self.vsd_client.last_graph_change}")
 
     def properties_on_change(self,graph_id, node_id, properties):
+        def is_ignored(prop):
+            id = (graph_id, node_id, prop['id'])
+            return id in self.vsd_client.ignored_property_changes
+
+        if all(is_ignored(prop) for prop in properties):
+            logging.debug(f"Change of {node_id} properties ignored")
+            return
+
         self.vsd_client.last_graph_change = datetime.now()
         logging.debug(f"Last change: {self.vsd_client.last_graph_change}")
 
@@ -111,6 +119,8 @@ class VSDClient:
         self.stop_simulation_event = asyncio.Event()
         self.stop_build_event = asyncio.Event()
         self._client = CommunicationBackend(host, port)
+
+        self.ignored_property_changes = []
         self.last_graph_change = datetime.now()
 
     async def start_listening(self):
@@ -303,6 +313,7 @@ class VSDClient:
                         machine, source, repl_label,
                         self.create_led_callback(graph.id, dest)
                     )
+                    await self._ignore_property(graph.id, dest.id, "active")
         except Exception as e:
             logging.error(str(e))
             emu.clear()
@@ -380,6 +391,24 @@ class VSDClient:
             json.dump(graph_json, f)
 
         return self._ok(f"Graphs saved in {dest_file}")
+
+    async def _ignore_property(self, graph_id, node_id, prop_name):
+        """
+        Save the information needed to recognize ignored properties.
+        The property is uniquely identified using graph id, node id and
+        property id.
+        """
+        resp = await self._client.request(
+            'properties_get',
+            { "graph_id": graph_id, "node_id": node_id }
+        )
+        for prop in resp['result']:
+            if prop["name"] == prop_name:
+                self.ignored_property_changes.append(
+                    (graph_id, node_id, prop["id"])
+                )
+                logging.debug("Ignoring: {} {}".format(node_id, prop["id"]))
+                break
 
 
 async def shutdown(loop):
