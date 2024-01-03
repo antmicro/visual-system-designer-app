@@ -29,4 +29,5 @@ validate-setup:
     when: always
   only:
     - main
+    - dev
     - merge_requests
