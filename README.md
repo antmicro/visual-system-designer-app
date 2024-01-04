@@ -40,17 +40,13 @@ NOTE: On Arch based systems additionally the `gtk-sharp` package must be install
 
 ## Setup
 
-To setup the workspace run:
 
 ```
-./setup.sh
-```
-
-After the setup is finished, the VSD environment must be activated by sourcing the script created in `workspace` directory.
-This file must be sourced in every shell that will be used to run the VSD application.
-
-```
-source workspace/vsd-env.sh
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+vsd init workspace
+export VSD_WORKSPACE=$(pwd)/workspace
 ```
 
 ## Starting the VSD application
@@ -67,17 +63,16 @@ It can be used to design a graph of the platform, build an example Zephyr applic
 To adjust the options used to start the VSD application use the following options (those can be listed with `--help`):
 
 ```
-Usage: vsd.py run [OPTIONS]
+Usage: vsd run [OPTIONS]
 
 Options:
   --application PATH          [default: demo/blinky-temperature]
-  --workspace PATH            [default: workspace]
-  --templates-dir PATH        [default: renode-templates]
+  --templates-dir PATH        [default: vsd/templates]
   --website-host TEXT         [default: 127.0.0.1]
   --website-port INTEGER      [default: 9000]
   --vsd-backend-host TEXT     [default: 127.0.0.1]
   --vsd-backend-port INTEGER  [default: 5000]
-  --verbosity TEXT            [default: WARNING]
+  --verbosity TEXT            [default: INFO]
 ```
 
 ## Using the VSD application
