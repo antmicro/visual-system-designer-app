@@ -58,7 +58,7 @@ source workspace/vsd-env.sh
 The most convenient way to run VSD is to use it interactively:
 
 ```
-./vsd.py run
+vsd run
 ```
 
 After running this command the VSD server will start and the application can be used in a web browser (by default at http://localhost:9000).
@@ -111,10 +111,10 @@ The VSD app comes with its own Zephyr demo ([demo/blinky-temperature](./demo/bli
 To build that demo you can start the VSD app and import the graph, or execute following commands in terminal:
 
 ```
-./vsd.py prepare-zephyr-board demo/stm32-led-thermometer.json
-./vsd.py build-zephyr demo-blinky-temp --app-path demo/blinky-temperature
-./vsd.py prepare-renode-files demo-blinky-temp
-./vsd.py simulate demo-blinky-temp
+vsd prepare-zephyr-board demo/stm32-led-thermometer.json
+vsd build-zephyr demo-blinky-temp --app-path demo/blinky-temperature
+vsd prepare-renode-files demo-blinky-temp
+vsd simulate demo-blinky-temp
 ```
 
 ## License
