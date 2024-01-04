@@ -108,7 +108,9 @@ To get more information about arguments and options for each command run it with
 ## Example application
 
 The VSD app comes with its own Zephyr demo ([demo/blinky-temperature](./demo/blinky-temperature/)) which can be used on a predefined graph ([stm32-led-thermometer.json](./demo/stm32-led-thermometer.json)).
-To build that demo you can start the VSD app and import the graph, or execute following commands in terminal:
+To run that demo interactively you can start the VSD app, import the graph and run the application using "Run" button.
+
+To prepare and run the demo in the shell execute following commands:
 
 ```
 vsd prepare-zephyr-board demo/stm32-led-thermometer.json
