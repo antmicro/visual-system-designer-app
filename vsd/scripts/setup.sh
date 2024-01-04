@@ -70,6 +70,10 @@ get_zephyr() {
       echo "INFO: Zephyr version is $EXPECTED_ZEPHYR_VERSION as expected."
     fi
   fi
+
+  # Always install Zephyr requirements
+  pip3 install -r $WORKSPACE/zephyr/scripts/requirements.txt
+
   if [[ -d $WORKSPACE/.west ]] ; then
     echo "INFO: West seems to be initialized in $WORKSPACE."
     echo "INFO: If you want to west init/update + install Zephyr deps, delete $WORKSPACE/.west and try again."
