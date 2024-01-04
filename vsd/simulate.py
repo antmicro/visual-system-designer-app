@@ -3,6 +3,7 @@
 
 import argparse
 import logging
+import os
 import re
 import sys
 
@@ -36,8 +37,8 @@ def _find_chosen(name, dts_path):
 
 
 def prepare_renode_files(board_name: str,
-                         workspace: Path = Path("workspace"),
                          templates_dir: Path = Path("renode-templates")):
+    workspace = Path(os.environ.get("VSD_WORKSPACE"))
     builds_dir = workspace / 'builds' / board_name
     dts_path = builds_dir / "zephyr/zephyr.dts"
     elf_path = builds_dir / "zephyr/zephyr.elf"
@@ -162,8 +163,9 @@ class ConsoleCallbackPool():
         return console_callback
 
 
-def simulate(board_name: str, workdir: Path = Path("workspace")):
-    builds_dir = workdir / 'builds' / board_name
+def simulate(board_name: str):
+    workspace = Path(os.environ.get("VSD_WORKSPACE"))
+    builds_dir = workspace / 'builds' / board_name
     repl_path = builds_dir / f"{board_name}.repl"
     elf_path = builds_dir / "zephyr/zephyr.elf"
     dts_path = builds_dir / "zephyr/zephyr.dts"

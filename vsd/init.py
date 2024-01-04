@@ -4,6 +4,7 @@ import subprocess
 import typer
 import yaml
 
+from functools import wraps
 from pathlib import Path
 from typing_extensions import Annotated
 
@@ -85,6 +86,17 @@ def setup_vsd_env():
     with open(workspace / "vsd-env.yml") as f:
         vars = yaml.safe_load(f)
     os.environ.update(vars)
+
+
+def setup_env(func):
+    """
+    Decorator used to setup VSD environment before executing command.
+    """
+    @wraps(func)
+    def inner(*args, **kwargs):
+        setup_vsd_env()
+        func(*args, **kwargs)
+    return inner
 
 
 def vsd_workspace_info():

@@ -230,8 +230,8 @@ def compose_west_command(board_name, app_path, build_dir, boards_dir):
     return cmd
 
 
-def prepare_zephyr_board(graph_file: Path,
-                         workspace: Path = Path("workspace")):
+def prepare_zephyr_board(graph_file: Path):
+    workspace = Path(os.environ.get("VSD_WORKSPACE"))
     with open(graph_file) as f:
         graph_json = json.load(f)
 
@@ -257,9 +257,7 @@ def prepare_zephyr_board(graph_file: Path,
 
 def build_zephyr(board_name: str,
                  app_path: Path = Path("demo/blinky-temperature"),
-                 workspace: Path = Path("workspace"),
                  quiet: bool = False):
-
     async def aprint(msg):
         print(msg, end='')
 
@@ -268,8 +266,7 @@ def build_zephyr(board_name: str,
             board_name,
             aprint if not quiet else None,
             None,
-            app_path,
-            workspace
+            app_path
         )
     )
 
@@ -277,8 +274,8 @@ def build_zephyr(board_name: str,
 async def build_zephyr_async(board_name: str,
                              print_callback,
                              kill_event,
-                             app_path: Path = Path("demo/blinky-temperature"),
-                             workspace: Path = Path("workspace")):
+                             app_path: Path = Path("demo/blinky-temperature")):
+    workspace = Path(os.environ.get("VSD_WORKSPACE"))
     build_dir = workspace / 'build'
 
     # Remove build directory to discard old build files
