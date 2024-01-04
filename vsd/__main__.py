@@ -3,19 +3,13 @@
 # Copyright (c) 2023-2024 Antmicro <www.antmicro.com>
 # SPDX-License-Identifier: Apache-2.0
 
-import atexit
 import logging
 import os
 import sys
 import typer
 
-from multiprocessing import Process
-from pathlib import Path
-from time import sleep
-
-from pipeline_manager.scripts.run import script_run as pm_main
 from vsd.build import build_zephyr, prepare_zephyr_board
-from vsd.backend import start_vsd_backend
+from vsd.backend import start_vsd_app
 from vsd.simulate import prepare_renode_files, simulate
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
@@ -28,43 +22,7 @@ app.command()(prepare_renode_files)
 
 app.command()(simulate)
 
-@app.command("run")
-def start_vsd_app(application: Path = Path("demo/blinky-temperature"),
-                  workspace: Path = Path("workspace"),
-                  templates_dir: Path = Path("renode-templates"),
-                  website_host: str = "127.0.0.1",
-                  website_port: int = 9000,
-                  vsd_backend_host: str = "127.0.0.1",
-                  vsd_backend_port: int = 5000,
-                  verbosity: str = "INFO"):
-
-    logging.basicConfig(level=verbosity, format="%(levelname)s:VSD backend:\t%(message)s")
-
-    frontend_dir = workspace / ".pipeline_manager/frontend"
-    app_workspace = workspace / ".pipeline_manager/workspace"
-
-    pm_args = (
-        "pipeline_manager",  # The first argument must be a program name.
-        "--frontend-directory", str(frontend_dir),
-        '--workspace-directory', str(app_workspace),
-        "--backend-host", website_host,
-        "--backend-port", str(website_port),
-        "--tcp-server-host", vsd_backend_host,
-        "--tcp-server-port", str(vsd_backend_port),
-        "--verbosity", "INFO",
-    )
-    pm_proc = Process(target=pm_main, args=[pm_args])
-    pm_proc.start()
-
-    def wait_for_pm():
-        pm_proc.join()
-        logging.info("Pipeline manager server closed. Exiting...")
-
-    atexit.register(wait_for_pm)
-    sleep(0.5)
-
-    # XXX: This function won't return.
-    start_vsd_backend(vsd_backend_host, vsd_backend_port, workspace, application, templates_dir)
+app.command("run")(start_vsd_app)
 
 
 def main():
