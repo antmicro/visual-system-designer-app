@@ -49,17 +49,6 @@ get_dependencies() {
   clone_or_update visual-system-designer-resources
 }
 
-install_requirements() {
-  if [[ ! -e $VSDENV/installed ]]; then
-    echo "INFO: Installing VSD Python requirements"
-    pip3 install -e .
-    touch $VSDENV/installed
-  else
-    echo "INFO: VSD Python requirements are marked as installed."
-    echo "INFO: Remove $VSDENV/installed to force reinstall on next run."
-  fi
-}
-
 get_zephyr() {
   EXPECTED_ZEPHYR_VERSION="$(cat $WORKSPACE/visual-system-designer-resources/zephyr-data/zephyr.version)"
   if [[ ! -d $WORKSPACE/zephyr ]] ; then
@@ -148,7 +137,6 @@ EOF
 
 #TODO: allow for individual running of commands, because why not
 get_dependencies
-install_requirements
 get_zephyr
 get_zephyr_sdk
 build_pipeline_manager
