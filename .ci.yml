@@ -11,9 +11,13 @@ validate-setup:
     - apt-get -y update &> /dev/null
     - apt-get -y install npm libarchive-tools curl git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget python3-venv python3-dev python3-pip python3-setuptools python3-tk python3-wheel xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev mono-complete
     - echo "progress=dot:giga" > ${HOME}/.wgetrc
+    # Initialize python venv and install VSD app
+    - python3 -m venv .venv
+    - source .venv/bin/activate
+    - pip install -e .
     # Setup workspace
-    - ./setup.sh
-    - source ${WORKSPACE}/vsd-env.sh
+    - vsd init workspace
+    - export VSD_WORKSPACE=$(pwd)/workspace
   script:
     # Build app on demo graph
     - vsd prepare-zephyr-board demo/stm32-led-thermometer.json
