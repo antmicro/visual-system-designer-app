@@ -137,13 +137,16 @@ EOF
 }
 
 #TODO: allow for individual running of commands, because why not
-get_dependencies
-get_zephyr
-get_zephyr_sdk
-build_pipeline_manager
-get_renode_arch_pkg
+if [ "$1" == "only-zephyr" ] ; then
+  get_zephyr
+else
+  get_zephyr_sdk
+  get_dependencies
+  build_pipeline_manager
+  get_renode_arch_pkg
+  ENV_FILE=$WORKSPACE/vsd-env.sh
+  generate_env_script
 
-ENV_FILE=$WORKSPACE/vsd-env.sh
-generate_env_script
+  echo "Configuration created in '$WORKSPACE' directory. Source the '$ENV_FILE' to activate VSD environment."
+fi
 
-echo "Configuration created in '$WORKSPACE' directory. Source the '$ENV_FILE' to activate VSD environment."

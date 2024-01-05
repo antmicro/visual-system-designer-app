@@ -6,12 +6,37 @@ import yaml
 
 from importlib.resources import files
 from pathlib import Path
-from typing_extensions import Annotated
+from typing import Optional, Annotated
 
 from vsd import env
 
 
-def init(dir: Annotated[Path, typer.Argument()] = "."):
+def search_for_zephyr_base(workspace):
+    # When zephyr is initialized in workspace, use it.
+    workspace_zephyr = workspace / "zephyr"
+    if workspace_zephyr.exists():
+        return workspace_zephyr.resolve()
+
+    if "ZEPHYR_BASE" in os.environ:
+        logging.warning(
+            f"Detected existing Zephyr workspace because ZEPHYR_BASE is set to {os.environ['ZEPHYR_BASE']}.\n"
+            "If you don't want to use it unset ZEPHYR_BASE variable."
+        )
+        return Path(os.environ["ZEPHYR_BASE"])
+
+    # Search for '.west' directory in all directories above.
+    d = workspace
+    while d != d.parent:
+        if d.exists() and ".west" in os.listdir(d):
+            logging.warning(
+                f"Detected existing Zephyr workspace because {d}/.west directory exists.\n"
+            )
+            return d / "zephyr"
+        d = d.parent
+    return None
+
+
+def init(dir: Annotated[Path, typer.Argument()] = ".", zephyr_base: Optional[Path] = None):
     """
     Initialize VSD workspace.
     """
@@ -25,17 +50,37 @@ def init(dir: Annotated[Path, typer.Argument()] = "."):
             exit(1)
 
     workspace = dir.resolve()
+    zephyr_base = zephyr_base or search_for_zephyr_base(workspace)
 
     print(f"Init VSD workspace in {workspace}")
+    os.makedirs(workspace, exist_ok=True)
 
     logging.warning("Using legacy setup script")
-    legacy_setup = files('vsd.scripts') / 'setup.sh'
+    legacy_setup = files("vsd.scripts") / "setup.sh"
 
     os.environ["WORKSPACE"] = str(workspace)
+
+    # Initialize all components besides zephyr
     ret = subprocess.run(["bash", str(legacy_setup)])
     if ret.returncode != 0:
         logging.error("Legacy setup fail")
-        exit(1)
+        exit(ret.returncode)
+
+
+    # Initialize Zephyr if it wasn't detected
+    if not zephyr_base:
+        logging.info(f"Initializing Zephyr in {workspace}")
+        ret = subprocess.run(["bash", str(legacy_setup), "only-zephyr"])
+        if ret.returncode != 0:
+            logging.error("Failed to initialize Zephyr.")
+            exit(ret.returncode)
+        zephyr_base = workspace / "zephyr"
+    else:
+        logging.warning(
+            f"Detected Zephyr workspace in {zephyr_base.parent}.\n"
+            "If you want to specify different location please provide path to initialized Zephyr "
+            "workspace using `--zephyr-base` option."
+        )
 
     # XXX: Parse old vsd-env.sh file to find proper paths there and create vsd-env.yaml
     with open(workspace / "vsd-env.sh") as f:
@@ -46,10 +91,10 @@ def init(dir: Annotated[Path, typer.Argument()] = "."):
     vars = (ln.strip().split("=") for ln in lines)
     vars = {k: v for [k, v] in vars if k in needed_vars}
 
-    vars["ZEPHYR_BASE"] = str(workspace / 'zephyr')
+    vars["ZEPHYR_BASE"] = str(zephyr_base.resolve())
 
     # Dump variables that will be needed later when running vsd app
-    with open(workspace / "vsd-env.yml", 'w') as f:
+    with open(workspace / "vsd-env.yml", "w") as f:
         yaml.dump(vars, f)
 
     if workspace != Path.cwd():
