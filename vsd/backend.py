@@ -13,6 +13,7 @@ import signal
 import sys
 
 from datetime import datetime
+from importlib.resources import files
 from multiprocessing import Process
 from pathlib import Path
 from time import sleep
@@ -474,7 +475,7 @@ def start_vsd_backend(host, port, workspace, application, templates):
 
 
 def start_vsd_app(application: Path = Path("demo/blinky-temperature"),
-                  templates_dir: Path = Path("renode-templates"),
+                  templates_dir: Path = files('vsd.templates').joinpath(""),
                   website_host: str = "127.0.0.1",
                   website_port: int = 9000,
                   vsd_backend_host: str = "127.0.0.1",

@@ -2,6 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "visual-system-designer-app"
 version = "0.0.1"
@@ -28,7 +32,5 @@ classifiers = [
 vsd = "vsd.__main__:main"
 
 [tool.setuptools.packages.find]
-include = [
-    "vsd",
-]
-namespaces = false
+namespaces = true
+include = ["vsd"]

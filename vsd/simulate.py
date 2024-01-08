@@ -7,8 +7,9 @@ import os
 import re
 import sys
 
-from pathlib import Path
 from dts2repl import dts2repl
+from importlib.resources import files
+from pathlib import Path
 
 
 def _prepare_from_template(format, template, dest):
@@ -37,7 +38,7 @@ def _find_chosen(name, dts_path):
 
 
 def prepare_renode_files(board_name: str,
-                         templates_dir: Path = Path("renode-templates")):
+                         templates_dir: Path = files('vsd.templates').joinpath("")):
     workspace = Path(os.environ.get("VSD_WORKSPACE"))
     builds_dir = workspace / 'builds' / board_name
     dts_path = builds_dir / "zephyr/zephyr.dts"

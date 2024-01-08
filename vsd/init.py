@@ -5,12 +5,12 @@ import typer
 import yaml
 
 from functools import wraps
+from importlib.resources import files
 from pathlib import Path
 from typing_extensions import Annotated
 
 
-def init(dir: Annotated[Path, typer.Argument()] = ".",
-         legacy_setup: Path = Path("./setup.sh")):
+def init(dir: Annotated[Path, typer.Argument()] = "."):
     """
     Initialize VSD workspace.
     """
@@ -28,10 +28,7 @@ def init(dir: Annotated[Path, typer.Argument()] = ".",
     print(f"Init VSD workspace in {workspace}")
 
     logging.warning("Using legacy setup script")
-
-    if not legacy_setup.exists():
-        logging.error(f"{legacy_setup} script doesn't exist. Please provide correct path.")
-        exit(1)
+    legacy_setup = files('vsd.scripts') / 'setup.sh'
 
     os.environ["WORKSPACE"] = str(workspace)
     ret = subprocess.run(["bash", str(legacy_setup)])
