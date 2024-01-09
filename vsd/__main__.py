@@ -4,7 +4,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import os
 import typer
+
+from typing import Optional
 
 from vsd.build import build_zephyr, prepare_zephyr_board
 from vsd.backend import start_vsd_app
@@ -26,6 +29,13 @@ app.command()(simulate)
 app.command("run")(start_vsd_app)
 
 app.command("info")(vsd_workspace_info)
+
+
+@app.callback()
+def set_logging(log_level: Optional[str] = None):
+    if not log_level:
+        log_level = os.environ.get('LOGLEVEL', 'INFO').upper()
+    logging.basicConfig(level=log_level, format="%(levelname)s:VSD: %(message)s")
 
 
 def main():
