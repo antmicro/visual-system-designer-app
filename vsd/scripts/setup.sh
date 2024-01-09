@@ -108,7 +108,8 @@ build_pipeline_manager() {
     --workspace-directory $WORKSPACE/.pipeline_manager/workspace \
     --output-directory $WORKSPACE/.pipeline_manager/frontend \
     --assets-directory $WORKSPACE/visual-system-designer-resources/assets \
-    --favicon-path $WORKSPACE/visual-system-designer-resources/assets/visual-system-designer.svg
+    --favicon-path $WORKSPACE/visual-system-designer-resources/assets/visual-system-designer.svg \
+    --editor-title "Visual System Designer"
 }
 
 get_renode_arch_pkg() {
