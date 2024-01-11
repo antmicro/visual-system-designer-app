@@ -9,7 +9,8 @@ import typer
 from vsd.build import build_zephyr, prepare_zephyr_board
 from vsd.backend import start_vsd_app
 from vsd.simulate import prepare_renode_files, simulate
-from vsd.init import init, setup_env, vsd_workspace_info
+from vsd.init import init, vsd_workspace_info
+from vsd.env import setup_env
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
 
