@@ -139,7 +139,7 @@ def _prep_thermometers(thermometers):
 
 
 def prepare_zephyr_board_dir(board_name, soc_name, connections, workspace):
-    zephyr_base = Path(os.environ.get('ZEPHYR_BASE'))
+    zephyr_base = Path(env.get_var('ZEPHYR_BASE'))
     socs_dir = workspace / "visual-system-designer-resources/zephyr-data/socs"
 
     soc_dir = socs_dir / soc_name
@@ -233,7 +233,7 @@ def compose_west_command(board_name, app_path, build_dir, boards_dir):
 
 @env.setup_env
 def prepare_zephyr_board(graph_file: Path):
-    workspace = Path(os.environ.get("VSD_WORKSPACE"))
+    workspace = Path(env.get_workspace())
     with open(graph_file) as f:
         graph_json = json.load(f)
 
@@ -278,7 +278,7 @@ async def build_zephyr_async(board_name: str,
                              print_callback,
                              kill_event,
                              app_path: Path = Path("demo/blinky-temperature")):
-    workspace = Path(os.environ.get("VSD_WORKSPACE"))
+    workspace = Path(env.get_workspace())
     build_dir = workspace / 'build'
 
     # Remove build directory to discard old build files

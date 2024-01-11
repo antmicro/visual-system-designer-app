@@ -6,6 +6,11 @@ from functools import wraps
 from pathlib import Path
 
 
+# Global VSD environment
+__vsd_workspace = None
+__vsd_env = None
+
+
 def setup_vsd_env():
     """
     Setup environment for VSD app from initialized VSD workspace.
@@ -17,7 +22,6 @@ def setup_vsd_env():
         workspace = Path(os.environ.get("VSD_WORKSPACE"))
     else:
         workspace = Path(".")
-        os.environ["VSD_WORKSPACE"] = str(workspace.resolve())
 
     if not (workspace / "vsd-env.yml").exists():
         logging.error(
@@ -29,7 +33,14 @@ def setup_vsd_env():
     # Set environ variables defined in vsd-env.yml
     with open(workspace / "vsd-env.yml") as f:
         vars = yaml.safe_load(f)
+
     os.environ.update(vars)
+
+    global __vsd_workspace
+    __vsd_workspace = workspace
+
+    global __vsd_env
+    __vsd_env = vars
 
 
 def setup_env(func):
@@ -38,6 +49,27 @@ def setup_env(func):
     """
     @wraps(func)
     def inner(*args, **kwargs):
-        setup_vsd_env()
+        if not __vsd_env:
+            setup_vsd_env()
         return func(*args, **kwargs)
     return inner
+
+
+def get_workspace():
+    if not __vsd_workspace:
+        logging.error(
+            "VSD environment not found.\n"
+            "Consider calling vsd.env.setup_vsd_env() or decorate your current function with vsd.env.setup_env"
+        )
+        exit(1)
+    return __vsd_workspace
+
+
+def get_var(var_name):
+    if not __vsd_workspace:
+        logging.error(
+            "VSD environment not found.\n"
+            "Consider calling vsd.env.setup_vsd_env() or decorate your current function with vsd.env.setup_env"
+        )
+        exit(1)
+    return __vsd_env.get(var_name)

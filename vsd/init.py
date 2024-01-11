@@ -65,7 +65,7 @@ def vsd_workspace_info():
     """
     Display info about initialized components of VSD workspace.
     """
-    workspace = Path(os.environ.get('VSD_WORKSPACE'))
+    workspace = Path(env.get_workspace())
 
     print(f"VSD workspace: {workspace}")
     with open(workspace / "vsd-env.yml") as f:

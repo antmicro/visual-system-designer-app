@@ -42,7 +42,7 @@ def _find_chosen(name, dts_path):
 @env.setup_env
 def prepare_renode_files(board_name: str,
                          templates_dir: Path = files('vsd.templates').joinpath("")):
-    workspace = Path(os.environ.get("VSD_WORKSPACE"))
+    workspace = Path(env.get_workspace())
     builds_dir = workspace / 'builds' / board_name
     dts_path = builds_dir / "zephyr/zephyr.dts"
     elf_path = builds_dir / "zephyr/zephyr.elf"
@@ -169,7 +169,7 @@ class ConsoleCallbackPool():
 
 @env.setup_env
 def simulate(board_name: str):
-    workspace = Path(os.environ.get("VSD_WORKSPACE"))
+    workspace = Path(env.get_workspace())
     builds_dir = workspace / 'builds' / board_name
     repl_path = builds_dir / f"{board_name}.repl"
     elf_path = builds_dir / "zephyr/zephyr.elf"

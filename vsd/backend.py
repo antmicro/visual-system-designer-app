@@ -486,7 +486,7 @@ def start_vsd_app(application: Path = Path("demo/blinky-temperature"),
 
     logging.basicConfig(level=verbosity, format="%(levelname)s:VSD backend:\t%(message)s")
 
-    workspace = Path(os.environ.get("VSD_WORKSPACE"))
+    workspace = Path(env.get_workspace())
     frontend_dir = workspace / ".pipeline_manager/frontend"
     app_workspace = workspace / ".pipeline_manager/workspace"
 
