@@ -8,6 +8,8 @@ from importlib.resources import files
 from pathlib import Path
 from typing_extensions import Annotated
 
+from vsd import env
+
 
 def init(dir: Annotated[Path, typer.Argument()] = "."):
     """
@@ -58,6 +60,7 @@ def init(dir: Annotated[Path, typer.Argument()] = "."):
         )
 
 
+@env.setup_env
 def vsd_workspace_info():
     """
     Display info about initialized components of VSD workspace.

@@ -13,6 +13,7 @@ import yaml
 
 from pathlib import Path
 
+from vsd import env
 from vsd.graph import Graph
 from vsd.specification import Specification
 
@@ -230,6 +231,7 @@ def compose_west_command(board_name, app_path, build_dir, boards_dir):
     return cmd
 
 
+@env.setup_env
 def prepare_zephyr_board(graph_file: Path):
     workspace = Path(os.environ.get("VSD_WORKSPACE"))
     with open(graph_file) as f:
@@ -271,6 +273,7 @@ def build_zephyr(board_name: str,
     )
 
 
+@env.setup_env
 async def build_zephyr_async(board_name: str,
                              print_callback,
                              kill_event,

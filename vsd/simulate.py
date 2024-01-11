@@ -11,6 +11,8 @@ from dts2repl import dts2repl
 from importlib.resources import files
 from pathlib import Path
 
+from vsd import env
+
 
 def _prepare_from_template(format, template, dest):
     with open(template) as f:
@@ -37,6 +39,7 @@ def _find_chosen(name, dts_path):
     return console_m.group(1)
 
 
+@env.setup_env
 def prepare_renode_files(board_name: str,
                          templates_dir: Path = files('vsd.templates').joinpath("")):
     workspace = Path(os.environ.get("VSD_WORKSPACE"))
@@ -164,6 +167,7 @@ class ConsoleCallbackPool():
         return console_callback
 
 
+@env.setup_env
 def simulate(board_name: str):
     workspace = Path(os.environ.get("VSD_WORKSPACE"))
     builds_dir = workspace / 'builds' / board_name

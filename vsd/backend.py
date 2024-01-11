@@ -24,6 +24,7 @@ from pipeline_manager_backend_communication.misc_structures import MessageType
 from pipeline_manager.scripts.run import script_run as pm_main
 
 from vsd import build
+from vsd import env
 from vsd import simulate
 from vsd.specification import Specification
 from vsd.graph import Graph
@@ -474,6 +475,7 @@ def start_vsd_backend(host, port, workspace, application, templates):
     sys.exit(0)
 
 
+@env.setup_env
 def start_vsd_app(application: Path = Path("demo/blinky-temperature"),
                   templates_dir: Path = files('vsd.templates').joinpath(""),
                   website_host: str = "127.0.0.1",
