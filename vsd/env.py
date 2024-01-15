@@ -55,21 +55,27 @@ def setup_env(func):
     return inner
 
 
+def _vsd_env_not_found_err():
+    logging.error(
+        "VSD environment not found.\n"
+        "Consider calling vsd.env.setup_vsd_env() or decorate your current function with vsd.env.setup_env"
+    )
+    exit(1)
+
+
 def get_workspace():
     if not __vsd_workspace:
-        logging.error(
-            "VSD environment not found.\n"
-            "Consider calling vsd.env.setup_vsd_env() or decorate your current function with vsd.env.setup_env"
-        )
-        exit(1)
+        _vsd_env_not_found_err()
     return __vsd_workspace
 
 
 def get_var(var_name):
     if not __vsd_workspace:
-        logging.error(
-            "VSD environment not found.\n"
-            "Consider calling vsd.env.setup_vsd_env() or decorate your current function with vsd.env.setup_env"
-        )
-        exit(1)
+        _vsd_env_not_found_err()
     return __vsd_env.get(var_name)
+
+
+def get_env():
+    if not __vsd_workspace:
+        _vsd_env_not_found_err()
+    return __vsd_env.copy()
