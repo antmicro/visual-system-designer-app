@@ -18,6 +18,12 @@ def setup_vsd_env():
     Ensures that we know where the VSD_WORKSPACE (default location is cwd) is
     and sets up all env variables needed by commands (with values read from <workspace>/vsd-env.yml).
     """
+    global __vsd_workspace
+    global __vsd_env
+
+    if __vsd_workspace:
+        return
+
     if "VSD_WORKSPACE" in os.environ:
         workspace = Path(os.environ.get("VSD_WORKSPACE"))
     else:
@@ -36,10 +42,7 @@ def setup_vsd_env():
 
     os.environ.update(vars)
 
-    global __vsd_workspace
     __vsd_workspace = workspace
-
-    global __vsd_env
     __vsd_env = vars
 
 
