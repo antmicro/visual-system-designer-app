@@ -1,5 +1,6 @@
 import logging
 import os
+import requests
 import subprocess
 import sys
 import typer
@@ -37,7 +38,105 @@ def search_for_zephyr_base(workspace):
     return None
 
 
-def init(dir: Annotated[Path, typer.Argument()] = ".", zephyr_base: Optional[Path] = None):
+def get_vsd_resources(workspace):
+    url = "https://github.com/antmicro/visual-system-designer-resources.git"
+    dest = workspace / "visual-system-designer-resources"
+
+    if dest.exists():
+        logging.info("visual-system-designer-resources repo exists")
+        return
+
+    logging.info(f"Cloning {url}")
+    ret = subprocess.run(["git", "clone", "-q", url, dest])
+    if ret.returncode != 0:
+        logging.error(f"Cloning VSD resources failed. (exitcode: {ret.returncode})")
+        exit(ret.returncode)
+
+
+def install_zephyr_requirements(zephyr_base):
+    zephyr_requirements = str(zephyr_base / "scripts/requirements.txt")
+    logging.info(f"Installing Zephyr requirements from: {zephyr_requirements}")
+    ret = subprocess.run([sys.executable, "-m", "pip", "-q", "install", "-r", zephyr_requirements])
+    if ret.returncode != 0:
+        logging.error(f"Installing Zephyr Python requirements failed. (exitcode: {ret.returncode})")
+        exit(ret.returncode)
+
+
+def init_zephyr(workspace):
+    with open(workspace / "visual-system-designer-resources/zephyr-data/zephyr.version") as f:
+        zephyr_version = f.read().strip()
+
+    logging.info(f"Initializing Zephyr workspace in {workspace}")
+
+    init_zephyr_sh = files("vsd.scripts") / "init_zephyr.sh"
+    ret = subprocess.run(["bash", str(init_zephyr_sh), str(workspace), zephyr_version])
+    if ret.returncode != 0:
+        logging.error(f"Zephyr initialization failed. (exitcode: {ret.returncode})")
+        exit(ret.returncode)
+
+    return workspace / "zephyr"
+
+
+def get_zephyr_sdk(sdk_version):
+    home = Path(os.environ["HOME"])
+    sdk_install_dir = Path(os.environ.get("ZEPHYR_SDK_INSTALL_DIR", home / f"zephyr-sdk-{sdk_version}"))
+
+    def read_sdk_version(dir):
+        return open(dir / "sdk_version").read().strip()
+
+    # If we have correct SDK version we don't need to install it again
+    if sdk_install_dir.exists() and sdk_version == read_sdk_version(sdk_install_dir):
+        logging.info(f"Found Zephyr SDK v{sdk_version} in {sdk_install_dir}")
+        return sdk_install_dir
+
+    # Change install directory to install expected SDK version
+    if sdk_install_dir.exists():
+        sdk_install_dir = sdk_install_dir.parent / f"zephyr-sdk-{sdk_version}"
+
+    logging.info(f"Installing Zephyr SDK v{sdk_version} in {sdk_install_dir}")
+    os.makedirs(sdk_install_dir, exist_ok=True)
+
+    get_zephyr_sdk_sh = files("vsd.scripts") / "get_zephyr_sdk.sh"
+    ret = subprocess.run(["bash", str(get_zephyr_sdk_sh), str(sdk_version), str(sdk_install_dir)])
+    if ret.returncode != 0:
+        logging.error(f"Installing Zephyr SDK failed. (exitcode: {ret.returncode})")
+        exit(ret.returncode)
+    return sdk_install_dir
+
+
+def build_pipeline_manager(workspace):
+    pipeline_manager_build_cmd = (
+        "pipeline_manager", "build", "server-app",
+        "--editor-title", "Visual System Designer",
+        "--workspace-directory", workspace / ".pipeline_manager/workspace",
+        "--output-directory", workspace / ".pipeline_manager/frontend",
+        "--assets-directory", workspace / "visual-system-designer-resources/assets",
+        "--favicon-path", workspace / "visual-system-designer-resources/assets/visual-system-designer.svg",
+    )
+    ret = subprocess.run(pipeline_manager_build_cmd)
+    if ret.returncode != 0:
+        logging.error(f"Pipeline manager frontend build failed. (exitcode: {ret.returncode})")
+        exit(ret.returncode)
+
+
+def get_renode(workspace):
+    pyrenode_arch_pkg = workspace / "renode-latest.pkg.tar.xz"
+    if pyrenode_arch_pkg.exists():
+        return pyrenode_arch_pkg
+
+    url = "https://builds.renode.io/renode-latest.pkg.tar.xz"
+
+    logging.info(f"Downloading {url}")
+    resp = requests.get(url)
+    resp.raise_for_status()
+    with open(pyrenode_arch_pkg, 'wb') as f:
+        f.write(resp.content)
+    return pyrenode_arch_pkg
+
+
+def init(dir: Annotated[Path, typer.Argument()] = ".",
+         zephyr_base: Optional[Path] = None,
+         zephyr_sdk: str = "0.16.3"):
     """
     Initialize VSD workspace.
     """
@@ -56,26 +155,11 @@ def init(dir: Annotated[Path, typer.Argument()] = ".", zephyr_base: Optional[Pat
     print(f"Init VSD workspace in {workspace}")
     os.makedirs(workspace, exist_ok=True)
 
-    logging.warning("Using legacy setup script")
-    legacy_setup = files("vsd.scripts") / "setup.sh"
-
-    os.environ["WORKSPACE"] = str(workspace)
-
-    # Initialize all components besides zephyr
-    ret = subprocess.run(["bash", str(legacy_setup)])
-    if ret.returncode != 0:
-        logging.error("Legacy setup fail")
-        exit(ret.returncode)
-
+    get_vsd_resources(workspace)
 
     # Initialize Zephyr if it wasn't detected
     if not zephyr_base:
-        logging.info(f"Initializing Zephyr in {workspace}")
-        ret = subprocess.run(["bash", str(legacy_setup), "only-zephyr"])
-        if ret.returncode != 0:
-            logging.error("Failed to initialize Zephyr.")
-            exit(ret.returncode)
-        zephyr_base = workspace / "zephyr"
+        zephyr_base = init_zephyr(workspace)
     else:
         logging.warning(
             f"Detected Zephyr workspace in {zephyr_base.parent}.\n"
@@ -83,26 +167,17 @@ def init(dir: Annotated[Path, typer.Argument()] = ".", zephyr_base: Optional[Pat
             "workspace using `--zephyr-base` option."
         )
 
-    # Install Zephyr requirements found int current Zephyr workspace
-    zephyr_requirements = str(zephyr_base / "scripts/requirements.txt")
-    logging.info(f"Installing Zephyr requirements from: {zephyr_requirements}")
-    ret = subprocess.run([sys.executable, "-m", "pip", "-q", "install", "-r", zephyr_requirements])
-    if ret.returncode != 0:
-        logging.error("Failed to install Zephyr requirements.")
-        exit(ret.returncode)
+    install_zephyr_requirements(zephyr_base)
+    build_pipeline_manager(workspace)
 
-    # XXX: Parse old vsd-env.sh file to find proper paths there and create vsd-env.yaml
-    with open(workspace / "vsd-env.sh") as f:
-        lines = filter(lambda x: "=" in x, f.readlines())
+    zephyr_sdk_install_dir = get_zephyr_sdk(zephyr_sdk)
+    pyrenode_arch_pkg = get_renode(workspace)
 
-    needed_vars = ("PYRENODE_ARCH_PKG", "ZEPHYR_SDK_INSTALL_DIR")
-
-    vars = (ln.strip().split("=") for ln in lines)
-    vars = {k: v for [k, v] in vars if k in needed_vars}
-
+    # Save paths that will be used later by vsd app
+    vars = {}
+    vars["PYRENODE_ARCH_PKG"] = str(pyrenode_arch_pkg.resolve())
+    vars["ZEPHYR_SDK_INSTALL_DIR"] = str(zephyr_sdk_install_dir.resolve())
     vars["ZEPHYR_BASE"] = str(zephyr_base.resolve())
-
-    # Dump variables that will be needed later when running vsd app
     with open(workspace / "vsd-env.yml", "w") as f:
         yaml.dump(vars, f)
 
