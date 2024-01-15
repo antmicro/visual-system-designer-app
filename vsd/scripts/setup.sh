@@ -80,7 +80,6 @@ get_zephyr() {
     west update
     west zephyr-export
     echo "INFO: Installing Zephyr's Python requirements."
-    pip3 install -r zephyr/scripts/requirements.txt
     cd -
   fi
 }

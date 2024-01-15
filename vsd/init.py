@@ -1,6 +1,7 @@
 import logging
 import os
 import subprocess
+import sys
 import typer
 import yaml
 
@@ -81,6 +82,14 @@ def init(dir: Annotated[Path, typer.Argument()] = ".", zephyr_base: Optional[Pat
             "If you want to specify different location please provide path to initialized Zephyr "
             "workspace using `--zephyr-base` option."
         )
+
+    # Install Zephyr requirements found int current Zephyr workspace
+    zephyr_requirements = str(zephyr_base / "scripts/requirements.txt")
+    logging.info(f"Installing Zephyr requirements from: {zephyr_requirements}")
+    ret = subprocess.run([sys.executable, "-m", "pip", "-q", "install", "-r", zephyr_requirements])
+    if ret.returncode != 0:
+        logging.error("Failed to install Zephyr requirements.")
+        exit(ret.returncode)
 
     # XXX: Parse old vsd-env.sh file to find proper paths there and create vsd-env.yaml
     with open(workspace / "vsd-env.sh") as f:
