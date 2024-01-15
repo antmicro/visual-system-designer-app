@@ -106,6 +106,9 @@ def init(dir: Annotated[Path, typer.Argument()] = ".", zephyr_base: Optional[Pat
     with open(workspace / "vsd-env.yml", "w") as f:
         yaml.dump(vars, f)
 
+    os.environ["VSD_WORKSPACE"] = str(workspace)
+    vsd_workspace_info()
+
     if workspace != Path.cwd():
         logging.warning(
             "VSD workspace initialized in directory which is not cwd.\n"
@@ -120,10 +123,9 @@ def vsd_workspace_info():
     Display info about initialized components of VSD workspace.
     """
     workspace = Path(env.get_workspace())
+    print(f"Workspace: {workspace}")
+    print("-----------------------")
 
-    print(f"VSD workspace: {workspace}")
-    with open(workspace / "vsd-env.yml") as f:
-        vars = yaml.safe_load(f)
-
-    for k, v in vars.items():
-        print(f"{k}: {v}")
+    max_len = max(len(x) for x in env.get_env().keys())
+    for k,v in env.get_env().items():
+        print(f"{k:<{max_len}}: {v}")
