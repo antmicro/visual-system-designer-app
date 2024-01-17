@@ -198,7 +198,8 @@ def prepare_zephyr_board_dir(board_name, soc_name, connections, workspace):
 
     if "additional_files" in configs:
         for file in configs["additional_files"]:
-            shutil.copy2(zephyr_base / file, board_dir)
+            if (zephyr_base / file).exists():
+                shutil.copy2(zephyr_base / file, board_dir)
 
     return board_dir
 
