@@ -3,7 +3,6 @@
 # Copyright (c) 2023-2024 Antmicro
 # SPDX-License-Identifier: Apache-2.0
 
-import os
 import json
 import logging
 import random
@@ -11,7 +10,8 @@ import re
 import sys
 import typer
 
-from enum import Enum
+from colorama import Fore, Style
+from enum import IntEnum
 from pathlib import Path
 from texttable import Texttable
 from threading import Event
@@ -46,16 +46,17 @@ i2c_addresses = {
 }
 
 
-class Status(Enum):
-    OK = 1
-    TIMEOUT = 2
-    SIMERROR = 3
-    BUILT = 4
+class Status(IntEnum):
+    NONE = 0
+    BAD_SPEC = 1
+    BAD_NAME = 2
+    BAD_INTERFACE = 3
+    CONFIG = 4
     GENERATED = 5
-    CONFIG = 6
-    BAD_INTERFACE = 7
-    BAD_NAME = 8
-    BAD_SPEC = 9
+    BUILT = 6
+    SIMERROR = 7
+    TIMEOUT = 8
+    OK = 9
 
     @classmethod
     def print_legend(cls):
@@ -69,10 +70,19 @@ class Status(Enum):
             cls.BAD_INTERFACE: "Error when looking for specified interface in node",
             cls.BAD_NAME: "Error when looking for Renodepedia name in node",
             cls.BAD_SPEC: "Error when looking for node in components specification",
+            cls.NONE: "There is no information about given configuration",
         }
         print("Status string legend:")
         for stat in cls:
             print(f" - {stat.name} -- {descr[stat]}")
+
+
+def red(text):
+    return Fore.RED + (text or '') + Style.RESET_ALL
+
+
+def green(text):
+    return Fore.GREEN + (text or '') + Style.RESET_ALL
 
 
 class NodeSpecNotFound(Exception):
@@ -365,6 +375,64 @@ def print_results(results: List[Path], output: Path = None):
 
     print("")
     Status.print_legend()
+
+
+@app.command()
+def show_changes(prev_results: Path, new_results: Path, fail_on_regression: bool = False):
+    with open(prev_results) as f:
+        prev_results = json.load(f)
+    with open(new_results) as f:
+        new_results = json.load(f)
+
+    new = new_results.keys() - prev_results.keys()
+    print(f"--- New SoCs ({len(new)}) ---")
+    for soc in new:
+        print(f" {soc}:")
+        for conf, res in new_results[soc].items():
+            print(green(f" {conf:>11}: NONE -> {res}"))
+    print("")
+
+    missing = prev_results.keys() - new_results.keys()
+    print(f"--- Missing SoCs ({len(missing)}) ---")
+    for soc in missing:
+        print(f" {soc}:")
+        for conf, res in prev_results[soc].items():
+            print(red(f" {conf:>11}: {res} -> NONE"))
+    print("")
+
+    regressions = 0
+    changes = []
+
+    for k in prev_results.keys() & new_results.keys():
+        res1 = prev_results[k]
+        res2 = new_results[k]
+        stats = []
+        for c in res1.keys() | res2.keys():
+            res1_outcome = Status[res1.get(c, "NONE")]
+            res2_outcome = Status[res2.get(c, "NONE")]
+
+            if res1_outcome > res2_outcome:
+                regressions += 1
+                color = red
+            elif res1_outcome < res2_outcome:
+                color = green
+            else:
+                continue
+            stats.append(color(f"{c:>11}: {res1_outcome.name} -> {res2_outcome.name}"))
+
+        if len(stats):
+            changes.append((k, stats))
+
+    print(f"--- Changes in individual SoCs ({len(changes)}) ---")
+    for soc, stats in changes:
+        print(f" {k}:")
+        for stat in stats:
+            print("  ", stat)
+
+
+    if regressions > 0 and fail_on_regression:
+        exit(1)
+
 
 if __name__ == "__main__":
     app()
