@@ -31,6 +31,9 @@ classifiers = [
 [project.scripts]
 vsd = "vsd.__main__:main"
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.packages.find]
 namespaces = true
 include = ["vsd"]
