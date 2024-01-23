@@ -4,6 +4,7 @@ stages:
   - prepare-workspace
   - validate
   - aggregate-results
+  - show-changes
 
 .common_only: &common_only
   only:
@@ -122,3 +123,23 @@ aggregate-results:
     paths:
       - results.json
       - workspace/builds
+
+
+show-changes:
+  <<: *common_only
+  stage: show-changes
+  tags: ['ace-x86_64']
+  dependencies: [aggregate-results]
+  before_script:
+    - apt-get -y update &> /dev/null
+    - apt-get -y install git curl jq python3 python3-venv python3-pip &> /dev/null
+    - *init-venv
+    - pip install -r tools/requirements.txt
+    - git clone https://github.com/antmicro/visual-system-designer-resources vsd-resources
+  script:
+    - ./tools/validate.py show-changes
+        vsd-resources/visual-system-designer-app/boards-support.json results.json
+  artifacts:
+    paths:
+      - results.json
+    when: always
