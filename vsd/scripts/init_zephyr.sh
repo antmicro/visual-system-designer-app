@@ -1,5 +1,8 @@
 #!/usr/bin/env sh
 
+# Copyright (c) 2022-2024 Antmicro <www.antmicro.com>
+# SPDX-License-Identifier: Apache-2.0
+
 
 WORKSPACE=$1
 EXPECTED_ZEPHYR_VERSION=$2
