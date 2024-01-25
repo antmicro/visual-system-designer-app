@@ -89,7 +89,7 @@ The build logs and Zephyr console output are available in dedicated terminals on
 ## Using VSD from command line
 
 VSD can be also used as a command line utility to execute each step of the application build process separately, without the need to start the VSD server.
-These commands can be used when you have obtained a graph from another source (e.g. from [designer.antmicro.com](https://designer.antmicro.com) or using `./vsd.py run`).
+These commands can be used when you have obtained a graph from another source (e.g. from [designer.antmicro.com](https://designer.antmicro.com) or using `vsd run` command).
 
 Available commands:
 
@@ -98,7 +98,7 @@ Available commands:
 - `prepare-renode-files` -- prepare Renode files needed to run simulation using build results
 - `simulate` -- start simulation of prepared application
 
-To get more information about arguments and options for each command run it with `./vsd.py run --help` option.
+To get more information about arguments and options for each command run it with `--help` option.
 
 ## Example application
 
