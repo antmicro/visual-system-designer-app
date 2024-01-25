@@ -2,8 +2,8 @@ name: Validate setup
 on: push
 
 jobs:
-  validate-setup:
-    name: Validate setup
+  prepare-workspace:
+    name: Prepare workspace
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
@@ -15,16 +15,51 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get -qqy update
+          sudo apt-get -qqy install npm libarchive-tools curl git cmake wget python3-venv python3-dev python3-pip xz-utils file
+
+      - name: Prepare workspace
+        run: |
+          echo "ZEPHYR_SDK_INSTALL_DIR=$(pwd)/zephyr-sdk" >> $GITHUB_ENV
+          export ZEPHYR_SDK_INSTALL_DIR=$(pwd)/zephyr-sdk
+          echo "progress=dot:giga" > ${HOME}/.wgetrc
+          pip install -e .
+          vsd init workspace
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: workspace
+          path: |
+            workspace
+            zephyr-sdk
+
+  validate-setup:
+    name: Validate setup
+    needs: prepare-workspace
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - uses: actions/download-artifact@v4
+        with:
+          name: workspace
+          path: .
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get -qqy update
           sudo apt-get -qqy purge mono-complete mono-runtime mono-devel
           sudo apt-get -qqy autoremove
           sudo apt-get -qqy install npm libarchive-tools curl git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev mono-complete=6.8.0.105+dfsg-2
 
-      - name: Prepare workspace
+      - name: Init workspace
         run: |
-          echo "progress=dot:giga" > ${HOME}/.wgetrc
+          echo "VSD_WORKSPACE=$(pwd)/workspace" >> $GITHUB_ENV
+          export VSD_WORKSPACE=$(pwd)/workspace
+          export ZEPHYR_SDK_INSTALL_DIR=$(pwd)/zephyr-sdk
           pip install -e .
           vsd init workspace
-          echo "VSD_WORKSPACE=$(pwd)/workspace" >> $GITHUB_ENV
 
       - name: Build and run demo
         run: |
@@ -40,13 +75,17 @@ jobs:
 
   socs-summary:
     name: Summarize supported configurations
+    needs: prepare-workspace
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+      - uses: actions/download-artifact@v4
+        with:
+          name: workspace
+          path: .
 
       - name: Install dependencies
         run: |
@@ -55,13 +94,13 @@ jobs:
           sudo apt-get -qqy autoremove
           sudo apt-get -qqy install npm libarchive-tools curl git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev mono-complete=6.8.0.105+dfsg-2
 
-      - name: Prepare workspace
+      - name: Init workspace
         run: |
-          echo "progress=dot:giga" > ${HOME}/.wgetrc
-          pip install -e .
-          pip install -r tools/requirements.txt
-          vsd init workspace
           echo "VSD_WORKSPACE=$(pwd)/workspace" >> $GITHUB_ENV
+          export VSD_WORKSPACE=$(pwd)/workspace
+          export ZEPHYR_SDK_INSTALL_DIR=$(pwd)/zephyr-sdk
+          pip install -e .
+          vsd init workspace
 
       - name: Test all configurations
         run: tools/validate.py all-socs --output results.json
