@@ -22,8 +22,6 @@ jobs:
       - name: Prepare workspace
         run: |
           echo "progress=dot:giga" > ${HOME}/.wgetrc
-          python3 -m venv .venv
-          source .venv/bin/activate
           pip install -e .
           vsd init workspace
           echo "VSD_WORKSPACE=$(pwd)/workspace" >> $GITHUB_ENV
