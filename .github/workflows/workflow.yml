@@ -36,3 +36,44 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: workspace/builds/demo-blinky-temp
+
+
+  socs-summary:
+    name: Summarize supported configurations
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get -qqy update
+          sudo apt-get -qqy purge mono-complete mono-runtime mono-devel
+          sudo apt-get -qqy autoremove
+          sudo apt-get -qqy install npm libarchive-tools curl git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev mono-complete=6.8.0.105+dfsg-2
+
+      - name: Prepare workspace
+        run: |
+          echo "progress=dot:giga" > ${HOME}/.wgetrc
+          pip install -e .
+          pip install -r tools/requirements.txt
+          vsd init workspace
+          echo "VSD_WORKSPACE=$(pwd)/workspace" >> $GITHUB_ENV
+
+      - name: Test all configurations
+        run: tools/validate.py all-socs --output results.json
+
+      - name: Show results
+        run: |
+          tools/validate.py print-results results.json > summary.txt
+          tools/validate.py print-results results.json
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: |
+            results.json
+            summary.txt
+            workspace/builds
