@@ -123,11 +123,17 @@ def build_pipeline_manager(workspace):
 
 
 def get_renode(workspace):
-    pyrenode_arch_pkg = workspace / "renode-latest.pkg.tar.xz"
+    pyrenode_arch_pkg = workspace / "renode.pkg.tar.xz"
     if pyrenode_arch_pkg.exists():
         return pyrenode_arch_pkg
 
-    url = "https://builds.renode.io/renode-latest.pkg.tar.xz"
+    # XXX: Temporary solution. The Renode version will be rolling again when changes
+    #      needed to create a regression summary in CI will be ready.
+    #
+    # After that, the link to download Renode will be:
+    # url = "https://builds.renode.io/renode-latest.pkg.tar.xz"
+
+    url = "https://builds.renode.io/renode-1.14.0+20240130git6e173a1bb-1-x86_64.pkg.tar.xz"
 
     logging.info(f"Downloading {url}")
     resp = requests.get(url)
