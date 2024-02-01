@@ -284,7 +284,7 @@ def validate_socs_list(socs, output_f, application, specification = None):
             print(f"  {config}: {status.name}")
 
     with open(output_f, "w") as f:
-        json.dump(results, f, indent=2)
+        json.dump(results, f, indent=4, sort_keys=True)
     print(f"Results saved to {output_f}")
 
 
