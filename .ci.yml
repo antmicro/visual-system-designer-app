@@ -137,9 +137,10 @@ show-changes:
     - pip install -r tools/requirements.txt
     - git clone https://github.com/antmicro/visual-system-designer-resources vsd-resources
   script:
-    - ./tools/validate.py show-changes
+    - ./tools/validate.py show-changes --fail-on-regression
         vsd-resources/visual-system-designer-app/boards-support.json results.json
   artifacts:
     paths:
       - results.json
     when: always
+  allow_failure: true
