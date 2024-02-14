@@ -295,7 +295,6 @@ def soc_list(socs_list: Path,
 
     with open(socs_list) as f:
         socs = f.read().strip().splitlines()
-    print(socs)
     validate_socs_list(socs, output, application)
 
 
@@ -418,16 +417,19 @@ def show_changes(prev_results: Path, new_results: Path, fail_on_regression: bool
                 color = green
             else:
                 continue
-            stats.append(color(f"{c:>11}: {res1_outcome.name} -> {res2_outcome.name}"))
+            stats.append(color(f"{c:>11}: {res1_outcome.name} ({res1_outcome}) -> {res2_outcome.name} ({res2_outcome})"))
 
         if len(stats):
             changes.append((k, stats))
 
     print(f"--- Changes in individual SoCs ({len(changes)}) ---")
     for soc, stats in changes:
-        print(f" {k}:")
+        print(f" {soc}:")
         for stat in stats:
             print("  ", stat)
+
+    print("")
+    Status.print_legend()
 
 
     if regressions > 0 and fail_on_regression:
