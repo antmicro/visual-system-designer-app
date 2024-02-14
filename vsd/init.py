@@ -184,7 +184,7 @@ def init(dir: Annotated[Path, typer.Argument()] = ".",
 
     # Save paths that will be used later by vsd app
     vars = {}
-    vars["PYRENODE_ARCH_PKG"] = str(pyrenode_arch_pkg.resolve())
+    vars["PYRENODE_PKG"] = str(pyrenode_arch_pkg.resolve())
     vars["ZEPHYR_SDK_INSTALL_DIR"] = str(zephyr_sdk_install_dir.resolve())
     vars["ZEPHYR_BASE"] = str(zephyr_base.resolve())
     with open(workspace / "vsd-env.yml", "w") as f:
