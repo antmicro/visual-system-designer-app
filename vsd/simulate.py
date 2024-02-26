@@ -1,7 +1,6 @@
 # Copyright (c) 2023-2024 Antmicro <www.antmicro.com>
 # SPDX-License-Identifier: Apache-2.0
 
-import argparse
 import logging
 import re
 import sys
@@ -21,8 +20,7 @@ def _prepare_from_template(format, template, dest):
 
 
 def _prepare_repl(dts_path, repl_path):
-    args = argparse.Namespace(filename=str(dts_path), override_system_clock_frequency=None)
-    repl = dts2repl.generate(args)
+    repl = dts2repl.generate(dts_path)
     if repl == '':
         return False
     with open(repl_path, 'w') as f:
