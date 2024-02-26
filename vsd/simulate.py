@@ -3,7 +3,6 @@
 
 import argparse
 import logging
-import os
 import re
 import sys
 
@@ -22,7 +21,8 @@ def _prepare_from_template(format, template, dest):
 
 
 def _prepare_repl(dts_path, repl_path):
-    repl = dts2repl.generate(argparse.Namespace(filename=str(dts_path)))
+    args = argparse.Namespace(filename=str(dts_path), override_system_clock_frequency=None)
+    repl = dts2repl.generate(args)
     if repl == '':
         return False
     with open(repl_path, 'w') as f:
