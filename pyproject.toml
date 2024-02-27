@@ -12,10 +12,16 @@ version = "0.0.1"
 authors = [{name = "Antmicro Ltd.", email = "contact@antmicro.com"}]
 description = "Visual System Designer application"
 dependencies = [
-    "pipeline-manager @ git+https://github.com/antmicro/kenning-pipeline-manager#egg=9642e3e81e85351c534a6478b1b4e410a571d26b",
-    "pipeline-manager-backend-communication @ git+https://github.com/antmicro/kenning-pipeline-manager-backend-communication#egg=df7db34e61d25ecf596cc2a053d95857b121af30",
-    "pyrenode3[all] @ git+https://github.com/antmicro/pyrenode3",
-    "dts2repl @ git+https://github.com/antmicro/dts2repl.git",
+    "pyrenode3[all]   @ git+https://github.com/antmicro/pyrenode3@e74fed065cf3a49beeaa94fd5bf2d72b8b7e1988",
+    "pipeline-manager @ git+https://github.com/antmicro/kenning-pipeline-manager@v0.0.1",
+    "pipeline-manager-backend-communication @ git+https://github.com/antmicro/kenning-pipeline-manager-backend-communication@v0.0.1",
+
+    # XXX: dts2repl version should be synced with the Renode version (which is
+    #      specified in vsd/init.py file). Eventually, it will be specified by
+    #      the Renode, but currently we have to do it manually. When updating
+    #      he version here, please check if Renode shouldn't be updated as well.
+    "dts2repl         @ git+https://github.com/antmicro/dts2repl@eff98d616e3541e54ca783c84f598c9e348a76a8",
+
     "pyyaml",
     "typer",
     "west",
