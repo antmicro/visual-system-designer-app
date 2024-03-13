@@ -45,9 +45,9 @@ setup-workspace:
   tags: ['ace-x86_64']
   before_script:
     - *install-requirements
+  script:
     - *init-venv
     - echo "progress=dot:giga" > ${HOME}/.wgetrc
-  script:
     # Setup workspace
     - vsd init workspace
     # Prepare archive that will be saved to artifacts
@@ -69,9 +69,9 @@ validate-setup:
   dependencies: [setup-workspace]
   before_script:
     - *install-requirements
+  script:
     - *init-venv
     - *init-workspace
-  script:
     # Build app on demo graph
     - vsd prepare-zephyr-board demo/stm32-led-thermometer.json
     - vsd build-zephyr demo-blinky-temp
@@ -94,10 +94,10 @@ validate-targets:
   parallel: 6
   before_script:
     - *install-requirements
+  script:
     - *init-venv
     - *init-workspace
     - pip install -r tools/requirements.txt
-  script:
     - ./tools/validate.py all-socs --chunk-total ${CI_NODE_TOTAL} --chunk-id $((${CI_NODE_INDEX} - 1)) --seed ${CI_COMMIT_SHA} --output validate-${CI_NODE_INDEX}.json
   artifacts:
     paths:
@@ -115,10 +115,10 @@ aggregate-results:
   before_script:
     - apt-get -y update &> /dev/null
     - apt-get -y install git python3 python3-venv python3-pip &> /dev/null
+  script:
     - *init-venv
     - pip install -r tools/requirements.txt
-  script:
-    ./tools/validate.py print-results validate-*.json --output results.json
+    - ./tools/validate.py print-results validate-*.json --output results.json
   artifacts:
     paths:
       - results.json
@@ -133,10 +133,10 @@ show-changes:
   before_script:
     - apt-get -y update &> /dev/null
     - apt-get -y install git curl jq python3 python3-venv python3-pip &> /dev/null
+  script:
     - *init-venv
     - pip install -r tools/requirements.txt
     - git clone https://github.com/antmicro/visual-system-designer-resources vsd-resources
-  script:
     - ./tools/validate.py show-changes --fail-on-regression
         vsd-resources/visual-system-designer-app/boards-support.json results.json
   artifacts:
