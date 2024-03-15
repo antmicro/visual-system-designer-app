@@ -147,6 +147,11 @@ def prepare_zephyr_board_dir(board_name, soc_name, connections, workspace):
         configs = yaml.safe_load(f)
 
     arch = configs["architecture"]
+
+    # XXX: In Zephyr both riscv32 and riscv64 architectures are under the same category.
+    if arch.startswith("riscv"):
+        arch = "riscv"
+
     board_dir = workspace / "boards" / arch / board_name
 
     # Remove old directory for board of the same name
