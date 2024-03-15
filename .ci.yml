@@ -14,7 +14,7 @@ stages:
 
 .install-requirements: &install-requirements |-
     apt-get -y update &> /dev/null
-    apt-get -y install npm libarchive-tools curl git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget python3-venv python3-dev python3-pip python3-setuptools python3-tk python3-wheel xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev mono-complete
+    apt-get -y install npm libarchive-tools curl git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget python3-venv python3-dev python3-pip python3-setuptools python3-tk python3-wheel xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev
 
 # Initialize python venv and install VSD app
 .init-venv: &init-venv |-
