@@ -3,7 +3,6 @@
 
 import logging
 import os
-import requests
 import subprocess
 import sys
 import typer
@@ -122,19 +121,31 @@ def build_pipeline_manager(workspace):
         exit(ret.returncode)
 
 
-def get_renode(workspace):
-    pyrenode_arch_pkg = workspace / "renode-latest.pkg.tar.xz"
-    if pyrenode_arch_pkg.exists():
-        return pyrenode_arch_pkg
+def get_renode_portable(workspace):
+    # NOTE: When updating the Renode version here, check if dts2repl shouldn't be updated as well.
+    #       dts2repl version is recorded in pyproject.toml.
+    renode_version = "1.14.0+20240314git7ff57f373"
 
-    url = "https://builds.renode.io/renode-latest.pkg.tar.xz"
+    portable_dir = workspace / "renode-portable"
+    renode_portable = portable_dir / "renode"
 
-    logging.info(f"Downloading {url}")
-    resp = requests.get(url)
-    resp.raise_for_status()
-    with open(pyrenode_arch_pkg, 'wb') as f:
-        f.write(resp.content)
-    return pyrenode_arch_pkg
+    if renode_portable.exists():
+        return renode_portable
+
+    url = f"https://builds.renode.io/renode-{renode_version}.linux-portable-dotnet.tar.gz"
+
+    logging.info(f"Downloading {url} and extractingn into {portable_dir}")
+
+    # XXX: We prefer to do most of initialization in Python, but this operation is simpler when
+    #      it's done in shell. `tar` command is way easier to use than `tarfile` module in Python.
+    os.makedirs(portable_dir, exist_ok=True)
+    subprocess.check_output(f"curl -sL {url} | tar xz --strip=1 -C {portable_dir}", shell=True)
+
+    if not renode_portable.exists():
+        logging.error("Renode portable wasn't downloaded.")
+        exit(1)
+
+    return renode_portable
 
 
 def init(dir: Annotated[Path, typer.Argument()] = ".",
@@ -174,11 +185,12 @@ def init(dir: Annotated[Path, typer.Argument()] = ".",
     build_pipeline_manager(workspace)
 
     zephyr_sdk_install_dir = get_zephyr_sdk(zephyr_sdk)
-    pyrenode_arch_pkg = get_renode(workspace)
+    renode_portable_path = get_renode_portable(workspace)
 
     # Save paths that will be used later by vsd app
     vars = {}
-    vars["PYRENODE_PKG"] = str(pyrenode_arch_pkg.resolve())
+    vars["PYRENODE_BIN"] = str(renode_portable_path.resolve())
+    vars["PYRENODE_RUNTIME"] = "coreclr"
     vars["ZEPHYR_SDK_INSTALL_DIR"] = str(zephyr_sdk_install_dir.resolve())
     vars["ZEPHYR_BASE"] = str(zephyr_base.resolve())
     with open(workspace / "vsd-env.yml", "w") as f:
