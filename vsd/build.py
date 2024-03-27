@@ -18,22 +18,15 @@ from vsd.graph import Graph
 from vsd.specification import Specification
 
 
-def _prep_kconfig_board(configs):
+def _prep_kconfig_board(board_name, configs):
     content = ""
-    content += "config BOARD_FAKE_BOARD\n"
-    content += "\tbool \"fake board\"\n"
+    content += f"config BOARD_{board_name.upper()}\n"
+    content += f"\tbool \"{board_name}\"\n"
     if "select" in configs:
         for flag in configs["select"]:
             content += f"\tselect {flag}\n"
-    return content
-
-
-def _prep_kconfig_defconfig(soc_name, configs):
-    board_name = configs.get('board_name', soc_name)
-    content = ""
-    content += "config BOARD\n"
-    content += f"\tdefault \"{board_name}\"\n"
-    content += "\tdepends on BOARD_FAKE_BOARD\n"
+    soc_name = configs["board_socs"][0]["name"]
+    content += f"\tselect SOC_{soc_name.upper()}"
     return content
 
 
@@ -138,6 +131,16 @@ def _prep_thermometers(thermometers):
     return snippet
 
 
+def _prep_board_yaml(board_name, configs):
+    return {
+        "board": {
+            "name": board_name,
+            "vendor": configs["vendor"],
+            "socs": configs["board_socs"]
+        }
+    }
+
+
 def prepare_zephyr_board_dir(board_name, soc_name, connections, workspace):
     zephyr_base = Path(env.get_var('ZEPHYR_BASE'))
     socs_dir = workspace / "visual-system-designer-resources/zephyr-data/socs"
@@ -146,13 +149,7 @@ def prepare_zephyr_board_dir(board_name, soc_name, connections, workspace):
     with open(soc_dir / "configs.yaml") as f:
         configs = yaml.safe_load(f)
 
-    arch = configs["architecture"]
-
-    # XXX: In Zephyr both riscv32 and riscv64 architectures are under the same category.
-    if arch.startswith("riscv"):
-        arch = "riscv"
-
-    board_dir = workspace / "boards" / arch / board_name
+    board_dir = workspace / "boards" / board_name
 
     # Remove old directory for board of the same name
     if board_dir.exists():
@@ -165,11 +162,11 @@ def prepare_zephyr_board_dir(board_name, soc_name, connections, workspace):
     #      specific configuration should not be added here but to the app config
     #      and overlay.
 
-    with open(board_dir / "Kconfig.board", "w") as f:
-        f.write(_prep_kconfig_board(configs))
+    with open(board_dir / f"Kconfig.{board_name}", "w") as f:
+        f.write(_prep_kconfig_board(board_name, configs))
 
-    with open(board_dir / "Kconfig.defconfig", "w") as f:
-        f.write(_prep_kconfig_defconfig(soc_name, configs))
+    with open(board_dir / "board.yml", "w") as f:
+        yaml.dump(_prep_board_yaml(board_name, configs), f, indent=2)
 
     with open(board_dir / f"{board_name}_defconfig", "w") as f:
         f.write(_prep_defconfig(configs, zephyr_base))
@@ -254,7 +251,7 @@ def prepare_zephyr_board(graph_file: Path):
 
     soc_name = soc.rdp_name
 
-    board_name = re.sub('\s', '_', graph.name)
+    board_name = re.sub(r'[\s\-+]', '_', graph.name)
     logging.info(f"Creating zephyr board named '{board_name}'")
 
     board_dir = prepare_zephyr_board_dir(board_name, soc_name, connections, workspace)
