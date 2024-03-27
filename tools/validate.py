@@ -141,7 +141,7 @@ def create_fake_node_connection(name, soc_iface, node_iface, spec, address):
 
 def prepare_single_config(soc, config, spec):
     connections = []
-    board_name = re.sub("\\s+", "_", soc) + config[3:]
+    board_name = re.sub(r"[\s+-]+", "_", soc + config[3:])
     soc_name = get_soc_rdp_name(soc, spec)
 
     for tmp in thermometers:
