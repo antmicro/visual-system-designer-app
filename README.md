@@ -114,6 +114,39 @@ vsd prepare-renode-files demo-blinky-temp
 vsd simulate demo-blinky-temp
 ```
 
+## Demo with pipeline manager hosted on the internet
+
+
+### Building and hosting Pipeline Manager
+
+In order to build Pipeline Manager application you have to download its repo from GitHub and additionally install `pipeline-manager-backend-communication`.
+After that the application is built using `build` script from Piepline Manager repo.
+
+```sh
+git clone git+https://github.com/antmicro/kenning-pipeline-manager.git
+pip install ./kenning-pipeline-manager
+
+pip install git+https://github.com/antmicro/kenning-pipeline-manager-backend-communication.git
+
+cd kenning-pipeline-manager
+./build server-app --communication-server-host localhost --communication-server-port 9000 --output-directory website
+```
+
+The `website` directory can now be served using any http server (e.g. the one included in Python3 distribution):
+
+```sh
+python3 -m http.server -d kenning-pipeline-manager/website
+```
+
+### Running the demo
+
+1. Start VSD app
+    ```sh
+    vsd run --application visual-system-designer-app/demo/blinky-temperature
+    ```
+2. Go to http://localhost:8000.
+3. Use VSD as usual (e.g. load `visual-system-designer-app/demo/stm32-led-thermometer.json` and click "Run").
+
 ## License
 
 This project is published under the [Apache-2.0](LICENSE) license.
