@@ -124,6 +124,9 @@ class RPCMethods:
     def position_on_change(self, graph_id, node_id, position):
         pass
 
+    async def terminal_read(self, name, message):
+        await self.vsd_client.uart_write(name, message)
+
 
 class VSDLogHandler(logging.Handler):
     def __init__(self, vsd_client: VSDClient):
@@ -149,6 +152,7 @@ class VSDClient:
         self.stop_simulation_event = asyncio.Event()
         self.stop_build_event = asyncio.Event()
         self._client = CommunicationBackend(host, port)
+        self.terminal_uarts = {}
 
         self.ignored_property_changes = []
         self.prop_change_callback = {}
@@ -173,6 +177,15 @@ class VSDClient:
         logging.getLogger().addHandler(VSDLogHandler(self))
         await self._client.start_json_rpc_client()
 
+    async def uart_write(self, term_name, chars):
+        uart = self.terminal_uarts.get(term_name)
+        if not uart:
+            logging.warning(f"Uart not found for terminal {term_name}")
+            return
+
+        for b in bytes(chars, "utf-8"):
+            uart.WriteChar(b)
+
     def _error(self, msg):
         return {
             'type': MessageType.ERROR.value,
@@ -195,12 +208,25 @@ class VSDClient:
             self._client.loop
         )
 
+    def terminal_add_sync(self, term_name, readonly):
+        asyncio.run_coroutine_threadsafe(
+            self.terminal_add(term_name, readonly),
+            self._client.loop
+        )
+
     async def terminal_write(self, term_name, msg):
         request = {
             "name": term_name,
             "message": msg.replace("\n", "\r\n"),
         }
         await self._client.request("terminal_write", request),
+
+    async def terminal_add(self, term_name, readonly):
+        request = {
+            "name": term_name,
+            "readonly": readonly,
+        }
+        await self._client.request("terminal_add", request),
 
     async def send_progress(self, method: str, progress: int):
         await self._client.request(
@@ -288,6 +314,8 @@ class VSDClient:
     def create_terminal_callback(self, term_name):
         decoder = simulate.UTF8Decoder()
 
+        self.terminal_add_sync(term_name, False)
+
         @decoder.wrap_callback
         def terminal_callback(char):
             self.terminal_write_sync(term_name, char)
@@ -358,18 +386,12 @@ class VSDClient:
             logging.error(f"Simulation can't be prepared using {binaries['repl']} and {binaries['elf']}:\n\t{e}")
             return self._error("Simulation failed.")
 
-        zephyr_console = simulate._find_chosen('zephyr,console', binaries['dts'])
-
         for uart, uart_name in simulate.get_all_uarts(machine):
-            if uart_name == zephyr_console:
-                term_name = f"zephyr-console ({uart_name})"
-            else:
-                term_name = uart_name
-
             simulate.register_uart_callback(
                 uart,
-                self.create_terminal_callback(term_name)
+                self.create_terminal_callback(uart_name)
             )
+            self.terminal_uarts[uart_name] = uart
 
         # Register leds callbacks
         try:
@@ -410,6 +432,7 @@ class VSDClient:
         await self.stop_simulation_event.wait()
         emu.clear()
 
+        self.terminal_uarts = {}
         self.stop_simulation_event.clear()
 
         logging.info(f"Simulation on {board_name} ended.")
