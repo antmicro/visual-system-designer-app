@@ -1,7 +1,7 @@
 {
     "graph": {
         "id": "5f7206e9-758b-4d5f-9df3-854364634101",
-        "name": "demo-blinky-temp",
+        "name": "demo_blinky_temp",
         "nodes": [
             {
                 "id": "930e3742-5a9f-4568-9472-efa29752f92d",
