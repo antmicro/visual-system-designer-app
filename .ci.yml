@@ -1,6 +1,8 @@
 image: debian:bookworm
 
 stages:
+  - build
+  - deploy
   - prepare-workspace
   - validate
   - aggregate-results
@@ -11,6 +13,49 @@ stages:
     - main
     - dev
     - merge_requests
+
+build:
+  <<: *common_only
+  when: manual
+  stage: build
+  tags: ['ace-x86_64']
+  before_script:
+    - apt-get -y update
+    - apt-get -y install npm libarchive-tools git python3-venv python3-dev python3-pip
+  script:
+    - python3 -m venv .venv && source .venv/bin/activate && python3 --version
+    - git clone https://github.com/antmicro/visual-system-designer-resources
+
+    - pip install git+https://github.com/antmicro/kenning-pipeline-manager.git
+    - pip install git+https://github.com/antmicro/kenning-pipeline-manager-backend-communication.git
+
+    - pipeline_manager build server-app
+        --assets-directory visual-system-designer-resources/assets/
+        --communication-server-host localhost
+        --communication-server-port 9000
+        --output-directory website
+        --workspace-directory pm-workspace
+
+    - tar cf $CI_DOCS_ARCHIVE -C website .
+  artifacts:
+    paths:
+      - $CI_DOCS_ARCHIVE
+
+
+deploy:
+  <<: *common_only
+  when: manual
+  image: $CI_DOCS_DOCKER_IMAGE
+  variables:
+    GIT_STRATEGY: none
+  dependencies:
+    - build
+  stage: deploy
+  tags: ['docs']
+  script: echo 'Deploying docs'
+  artifacts:
+    paths:
+      - $CI_DOCS_ARCHIVE
 
 .install-requirements: &install-requirements |-
     apt-get -y update &> /dev/null
