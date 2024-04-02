@@ -482,24 +482,35 @@ def start_vsd_app(application: Path = Path("demo/blinky-temperature"),
                   website_port: int = 9000,
                   vsd_backend_host: str = "127.0.0.1",
                   vsd_backend_port: int = 5000,
+                  remote: bool = False,
                   verbosity: str = "INFO"):
 
     logging.basicConfig(level=verbosity, format="%(levelname)s:VSD backend:\t%(message)s")
 
     workspace = Path(env.get_workspace())
-    frontend_dir = workspace / ".pipeline_manager/frontend"
-    app_workspace = workspace / ".pipeline_manager/workspace"
-
-    pm_args = (
-        "pipeline_manager",  # The first argument must be a program name.
-        "--frontend-directory", str(frontend_dir),
-        '--workspace-directory', str(app_workspace),
-        "--backend-host", website_host,
-        "--backend-port", str(website_port),
-        "--tcp-server-host", vsd_backend_host,
-        "--tcp-server-port", str(vsd_backend_port),
-        "--verbosity", "INFO",
-    )
+    if remote:
+        pm_args = (
+            "pipeline_manager",  # The first argument must be a program name.
+            "--skip-frontend",
+            "--backend-host", website_host,
+            "--backend-port", str(website_port),
+            "--tcp-server-host", vsd_backend_host,
+            "--tcp-server-port", str(vsd_backend_port),
+            "--verbosity", "INFO",
+        )
+    else:
+        frontend_dir = workspace / ".pipeline_manager/frontend"
+        app_workspace = workspace / ".pipeline_manager/workspace"
+        pm_args = (
+            "pipeline_manager",  # The first argument must be a program name.
+            "--frontend-directory", str(frontend_dir),
+            '--workspace-directory', str(app_workspace),
+            "--backend-host", website_host,
+            "--backend-port", str(website_port),
+            "--tcp-server-host", vsd_backend_host,
+            "--tcp-server-port", str(vsd_backend_port),
+            "--verbosity", "INFO",
+        )
     pm_proc = Process(target=pm_main, args=[pm_args])
     pm_proc.start()
 
