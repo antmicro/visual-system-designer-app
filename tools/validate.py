@@ -103,7 +103,7 @@ def find_soc_interface(soc, if_type, spec):
         raise NodeSpecNotFound(f"Node '{soc}' not found in specification")
 
     for interface in spec_node["interfaces"]:
-        if if_type == interface["type"]:
+        if if_type == interface.get("type"):
             return interface["name"]
     raise InterfaceNotFound(f"Interface of type '{if_type}' not found in '{soc}'")
 
