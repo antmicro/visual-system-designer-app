@@ -40,6 +40,7 @@ NOTE: On Arch based systems additionally the `gtk-sharp` package must be install
 
 ## Setup
 
+To prepare project's environment and download necessary files, run:
 
 ```
 python3 -m venv .venv
@@ -114,23 +115,31 @@ vsd prepare-renode-files demo-blinky-temp
 vsd simulate demo-blinky-temp
 ```
 
-## Demo with pipeline manager hosted on the internet
-
+## Demo with frontend hosted on a remote server
 
 ### Building and hosting Pipeline Manager
 
-In order to build Pipeline Manager application you have to download its repo from GitHub and additionally install `pipeline-manager-backend-communication`.
-After that the application is built using `build` script from Piepline Manager repo.
+In order to build Pipeline Manager frontend, create the `venv` environment and install [Pipeline Manager](https://github.com/antmicro/kenning-pipeline-manager):
 
 ```sh
-git clone git+https://github.com/antmicro/kenning-pipeline-manager.git
-pip install ./kenning-pipeline-manager
-
-pip install git+https://github.com/antmicro/kenning-pipeline-manager-backend-communication.git
-
-cd kenning-pipeline-manager
-./build server-app --communication-server-host localhost --communication-server-port 9000 --output-directory website
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e git+https://github.com/antmicro/kenning-pipeline-manager.git
 ```
+
+The frontend requires additional assets (icons, graphics, ...) to render properly - they can be obtained from [VSD resources repository](https://github.com/antmicro/visual-system-designer-resources):
+
+```sh
+git clone https://github.com/antmicro/visual-system-designer-resources.git
+```
+
+After obtaining all requirements, the frontend can be built with:
+
+```sh
+pipeline_manager build server-app --communication-server-host localhost --communication-server-port 9000 --output-directory website --workspace-directory pm-workspace --assets-directory visual-system-designer-resources/assets/
+```
+
+The `--communication-server-host` and `--communication-server-port` specify the address from which the `vsd run` command will connect (from the user desktop perspective, hence `localhost` is sufficient).
 
 The `website` directory can now be served using any http server (e.g. the one included in Python3 distribution):
 
@@ -140,12 +149,15 @@ python3 -m http.server -d kenning-pipeline-manager/website
 
 ### Running the demo
 
-1. Start VSD app
+Assuming the commands are executed in the root directory for this project:
+
+1. Prepare the workspace as described in [Setup](#setup).
+1. Start VSD app (the `--application <dir>` is the path to the sources for the Zephyr application)
     ```sh
-    vsd run --application visual-system-designer-app/demo/blinky-temperature
+    vsd run --application demo/blinky-temperature
     ```
-2. Go to http://localhost:8000.
-3. Use VSD as usual (e.g. load `visual-system-designer-app/demo/stm32-led-thermometer.json` and click "Run").
+2. Go to address hosting Pipeline Manager (using above Python server go to http://localhost:8000).
+3. Use VSD as usual (e.g. load [`visual-system-designer-app/demo/stm32-led-thermometer.json`](visual-system-designer-app/demo/stm32-led-thermometer.json) and click "Run").
 
 ## License
 
