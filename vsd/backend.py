@@ -21,6 +21,9 @@ from typing import Dict
 
 from pipeline_manager_backend_communication.communication_backend import CommunicationBackend
 from pipeline_manager_backend_communication.misc_structures import MessageType
+from pipeline_manager_backend_communication.utils import (
+    convert_message_to_string,
+)
 from pipeline_manager.scripts.run import script_run as pm_main
 
 from vsd import build
@@ -46,10 +49,21 @@ class RPCMethods:
         await self.vsd_client.send_progress("custom_build", -1)
         return await self.vsd_client.handle_build(dataflow)
 
-    def dataflow_import(self, external_application_dataflow: Dict) -> Dict:
+    def dataflow_import(
+        self,
+        external_application_dataflow: str,
+        mime: str,
+        base64: bool,
+    ) -> Dict:
         # XXX: Just copy the imported dataflow, because it uses the same format
         #      as expected by the frontend.
-        return self.vsd_client._ok(external_application_dataflow)
+        dataflow = convert_message_to_string(
+            message=external_application_dataflow,
+            mime=mime,
+            base64=base64,
+        )
+        dataflow = json.loads(dataflow)
+        return self.vsd_client._ok(dataflow)
 
     def dataflow_export(self, dataflow: Dict) -> Dict:
         return self.vsd_client.save_graph(dataflow)
