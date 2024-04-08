@@ -18,6 +18,13 @@ from vsd.graph import Graph
 from vsd.specification import Specification
 
 
+supported_sensors = {
+    'bosch_bme280': 'thermometer',
+    'sensirion_sht4x': 'thermometer',
+    'silabs_si7210': 'thermometer',
+    'ti_tmp108': 'thermometer',
+}
+
 def _prep_kconfig_board(board_name, configs):
     content = ""
     content += f"config BOARD_{board_name.upper()}\n"
@@ -109,24 +116,30 @@ def _create_connection_snippet(name, label, addr, compats, soc_if, sensor_type):
     if sensor_type:
         snippet += f'\t\tfriendly-name = "{sensor_type}";\n'
 
+    # HACK: this should be done somewhere else, but now we don't have a place
+    #       here to make such tweaks. This property is required because it's
+    #       specified in Zephyr dts bindings.
+    if compats == '"sensirion,sht4x"':
+        snippet += "repeatability = <2>;"
+
     snippet += '\t\tstatus = "okay";\n'
     snippet += "\t};\n"
     snippet += "};\n"
     return snippet
 
 
-def _prep_thermometers(thermometers):
+def _prep_sensors(sensors):
     snippet = ""
-    for (i, (soc_if, node_if, temp)) in enumerate(thermometers):
-        name = temp.rdp_name if temp.rdp_name else temp.name
-        compats = temp.get_compats()
-        addr = temp.get_node_interface_address(node_if)
-        label = temp.label
+    for (i, (soc_if, node_if, sensor)) in enumerate(sensors):
+        name = sensor.rdp_name if sensor.rdp_name else sensor.name
+        compats = sensor.get_compats()
+        addr = sensor.get_node_interface_address(node_if)
+        label = sensor.label
 
         if not addr:
-            logging.warning(f"Can't find address for node {temp.name}. Inserting without address.")
+            logging.warning(f"Can't find address for node {sensor.name}. Inserting without address.")
 
-        snippet += _create_connection_snippet(name, label, addr, compats, soc_if, 'thermometer')
+        snippet += _create_connection_snippet(name, label, addr, compats, soc_if, supported_sensors[sensor.rdp_name])
 
     return snippet
 
@@ -183,20 +196,20 @@ def prepare_zephyr_board_dir(board_name, soc_name, connections, workspace):
                 lambda node: node.category.startswith("IO/LED")
             )
 
-            thermometers, connections = _filter_nodes(
+            sensors, connections = _filter_nodes(
                 connections,
-                lambda node: node.rdp_name in ['ti_tmp108', 'silabs_si7210']
+                lambda node: node.rdp_name in supported_sensors
             )
 
             if len(connections) > 0:
                 logging.warning(f"There are {len(connections)} connections that are currently not supported!")
                 for soc_if, node_if, component in connections:
-                    logging.warning(f" - {component.name}: {node_if} -> {soc_if}")
+                    logging.warning(f" - {component.name} ({component.rdp_name}): {node_if} -> {soc_if}")
 
             output.write("\n\n// nodes from graph\n\n")
 
             output.write(_prep_leds(leds))
-            output.write(_prep_thermometers(thermometers))
+            output.write(_prep_sensors(sensors))
 
     if "additional_files" in configs:
         for file in configs["additional_files"]:
