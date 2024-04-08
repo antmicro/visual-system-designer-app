@@ -348,7 +348,7 @@ class VSDClient:
 
         try:
             for source, connection, dest in connections:
-                if connection == 'gpio':
+                if connection == 'gpio' and dest.label.startswith("led"):
                     repl_label = re.sub("_", "", dest.label)
                     logging.info(f"Connecting state observer to {dest.label} ({repl_label})")
                     simulate.register_led_callback(
