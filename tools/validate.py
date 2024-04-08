@@ -232,11 +232,15 @@ def validate(soc, config, spec, app, workspace, zephyr_base):
 
     status = Status.CONFIG
 
-    board_dir = build.prepare_zephyr_board_dir(board_name, soc_name, connections, workspace)
-    if board_dir:
-        status = Status.GENERATED
-    else:
-        return status
+    try:
+        board_dir = build.prepare_zephyr_board_dir(board_name, soc_name, connections, workspace)
+        if board_dir:
+            status = Status.GENERATED
+        else:
+            return status
+    except:
+        print(f"Board {board_name} failed unrecoverably")
+        return Status.BAD_NAME
 
     build_ret, build_dir = build.build_zephyr(board_name, app, quiet=True)
     if build_ret == 0:
