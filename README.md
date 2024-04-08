@@ -124,7 +124,7 @@ In order to build Pipeline Manager frontend, create the `venv` environment and i
 ```sh
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e git+https://github.com/antmicro/kenning-pipeline-manager.git
+pip install git+https://github.com/antmicro/kenning-pipeline-manager.git
 ```
 
 The frontend requires additional assets (icons, graphics, ...) to render properly - they can be obtained from [VSD resources repository](https://github.com/antmicro/visual-system-designer-resources):
