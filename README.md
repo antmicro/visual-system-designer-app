@@ -144,7 +144,7 @@ The `--communication-server-host` and `--communication-server-port` specify the 
 The `website` directory can now be served using any http server (e.g. the one included in Python3 distribution):
 
 ```sh
-python3 -m http.server -d kenning-pipeline-manager/website
+python3 -m http.server -d ./website
 ```
 
 ### Running the demo
