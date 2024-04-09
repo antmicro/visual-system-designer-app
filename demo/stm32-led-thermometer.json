@@ -243,11 +243,6 @@
                         "name": "address (gpio)",
                         "id": "09ebbc50-59a9-4800-9181-26cebaf9d980",
                         "value": "0x0"
-                    },
-                    {
-                        "name": "active",
-                        "id": "78bbd624-d2c3-488b-8224-7886d6700bad",
-                        "value": false
                     }
                 ],
                 "enabledInterfaceGroups": [],
@@ -276,11 +271,6 @@
                         "name": "address (gpio)",
                         "id": "331a09b7-777a-4d68-8492-fc3400fe4f92",
                         "value": "0x1"
-                    },
-                    {
-                        "name": "active",
-                        "id": "349c9106-a348-4449-84aa-75feeb0fea5f",
-                        "value": false
                     }
                 ],
                 "enabledInterfaceGroups": [],
@@ -309,11 +299,6 @@
                         "name": "address (gpio)",
                         "id": "d53e9875-a773-41af-bad9-8964a5ca00d5",
                         "value": "0x0"
-                    },
-                    {
-                        "name": "active",
-                        "id": "77d38421-57e9-4fff-9a8d-497eb064a170",
-                        "value": false
                     }
                 ],
                 "enabledInterfaceGroups": [],
