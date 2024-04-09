@@ -10,6 +10,11 @@ class Node():
         self._node = node
         self._spec = specification.get_node_spec(node['name'])
         self._label = None
+
+        raw_props = self._node.get('properties', [])
+        props = dict(zip(map(lambda x: x["name"], raw_props), raw_props))
+        self.properties = props
+
         self.id = node['id']
         self.connections = {}
         self.interfaces = {}
@@ -69,16 +74,13 @@ class Node():
         return None
 
     def get_node_interface_address(self, interface):
-        if 'properties' not in self._node:
-            return None
-
-        for prop in self._node['properties']:
-            if f'address ({interface})' in prop['name']:
-                logging.debug(f"Found address property {prop['name']} in {self.name}: {prop['value']}")
+        for prop, data in self.properties.items():
+            if f'address ({interface})' in prop:
+                logging.debug(f"Found address property {prop} in {self.name}: {data['value']}")
                 try:
-                    value = int(prop['value'], base=16)
+                    value = int(data['value'], base=16)
                 except ValueError:
-                    logging.error(f"Missing or invalid value for {prop['name']}: '{prop['value']}'")
+                    logging.error(f"Missing or invalid value for {prop}: '{data['value']}'")
                     return None
                 return value
 
