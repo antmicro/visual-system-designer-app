@@ -143,7 +143,6 @@ class VSDLogHandler(logging.Handler):
 class VSDClient:
     def __init__(self, host, port, workspace, app, templates_dir):
         self.specification = Specification(workspace / "visual-system-designer-resources/components-specification.json")
-        self.adjust_specification()
         self.workspace = workspace
         self.app = app
         self.templates = templates_dir
@@ -154,6 +153,15 @@ class VSDClient:
         self.ignored_property_changes = []
         self.prop_change_callback = {}
         self.last_graph_change = datetime.now()
+
+        self._supported_thermometers = [
+            "Sensor/Environmental/bme280",
+            "Sensor/Environmental/sht4xd",
+            "Sensor/Environmental/Temperature/tmp108",
+            "Sensor/Hall/si7210",
+        ]
+
+        self.adjust_specification()
 
     def clean_dataflow_data(self):
         self.ignored_property_changes = []
@@ -214,12 +222,22 @@ class VSDClient:
         for node in self.specification.spec_json["nodes"]:
             if "category" not in node:
                 continue
+
             if node["category"] == "IO/LED":
                 node["properties"].append(
                     {
                         "default": False,
                         "name": "active",
                         "type": "bool"
+                    }
+                )
+
+            if node["category"] in self._supported_thermometers:
+                node["properties"].append(
+                    {
+                        "default": 20.0,
+                        "name": "temperature",
+                        "type": "number"
                     }
                 )
 
@@ -362,14 +380,25 @@ class VSDClient:
 
         try:
             for source, connection, dest in connections:
+                repl_label = re.sub("_", "", dest.label)
+
                 if connection == 'gpio' and dest.label.startswith("led"):
-                    repl_label = re.sub("_", "", dest.label)
                     logging.info(f"Connecting state observer to {dest.label} ({repl_label})")
                     simulate.register_led_callback(
                         machine, source, repl_label,
                         self.create_led_callback(graph.id, dest)
                     )
                     await self._ignore_property(graph.id, dest.id, "active")
+
+                if connection == 'i2c' and "temperature" in dest.properties:
+                    logging.info(f"Creating set temperature callback to {dest.label}")
+                    await self._add_property_callback(
+                        graph.id, dest.id, "temperature",
+                        simulate.create_temperature_callback(source, repl_label),
+                    )
+                    # Ignore this property, because it shouldn't trigger Zephyr building on change.
+                    await self._ignore_property(graph.id, dest.id, "active")
+
         except Exception as e:
             logging.error(str(e))
             emu.clear()

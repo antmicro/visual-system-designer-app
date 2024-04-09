@@ -88,6 +88,20 @@ def register_led_callback(machine, source, repl_label, callback):
     led.StateChanged += (callback)
 
 
+def create_temperature_callback(source, repl_label):
+    from pyrenode3.wrappers import Monitor
+    monitor = Monitor()
+
+    def set_temp(new_temp):
+        logging.debug(f"Setting temperature to {new_temp}")
+        command = f"sysbus.{source}.{repl_label} Temperature {new_temp}"
+        _, err = monitor.execute(command)
+        if err:
+            logging.warning(f"Error while running command '{command}': {err}")
+
+    return set_temp
+
+
 class UTF8Decoder:
     def __init__(self):
         self._utf8_chars_left = 0
