@@ -20,7 +20,7 @@ dependencies = [
     #      specified in vsd/init.py file). Eventually, it will be specified by
     #      the Renode, but currently we have to do it manually. When updating
     #      he version here, please check if Renode shouldn't be updated as well.
-    "dts2repl         @ git+https://github.com/antmicro/dts2repl@eff98d616e3541e54ca783c84f598c9e348a76a8",
+    "dts2repl         @ git+https://github.com/antmicro/dts2repl@fa6c132a394e3503c1ba4466e546f98e33b098cf",
 
     "pyyaml",
     "typer",
