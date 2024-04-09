@@ -134,7 +134,7 @@ class VSDLogHandler(logging.Handler):
 class VSDClient:
     def __init__(self, host, port, workspace, app, templates_dir):
         self.specification = Specification(workspace / "visual-system-designer-resources/components-specification.json")
-        self.adjust_specifiaction()
+        self.adjust_specification()
         self.workspace = workspace
         self.app = app
         self.templates = templates_dir
@@ -144,7 +144,6 @@ class VSDClient:
 
         self.ignored_property_changes = []
         self.last_graph_change = datetime.now()
-
     async def start_listening(self):
         await self._client.initialize_client(RPCMethods(self))
         logging.info("Start listening for messages from pipeline manager")
@@ -195,7 +194,7 @@ class VSDClient:
             'content': msg
         }
 
-    def adjust_specifiaction(self):
+    def adjust_specification(self):
         # Add property for LEDs indicating if they are active
         for node in self.specification.spec_json["nodes"]:
             if "category" not in node:
