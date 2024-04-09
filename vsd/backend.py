@@ -63,6 +63,7 @@ class RPCMethods:
             base64=base64,
         )
         dataflow = json.loads(dataflow)
+        self.vsd_client.clean_dataflow_data()
         return self.vsd_client._ok(dataflow)
 
     def dataflow_export(self, dataflow: Dict) -> Dict:
@@ -88,11 +89,19 @@ class RPCMethods:
 
     def properties_on_change(self,graph_id, node_id, properties):
         def is_ignored(prop):
-            id = (graph_id, node_id, prop['id'])
             return id in self.vsd_client.ignored_property_changes
 
-        if all(is_ignored(prop) for prop in properties):
-            logging.debug(f"Change of {node_id} properties ignored")
+        all_ignored = True
+        for prop in properties:
+            id = (graph_id, node_id, prop['id'])
+            if id not in self.vsd_client.ignored_property_changes:
+                all_ignored = False
+
+            if cb := self.vsd_client.prop_change_callback.get(id):
+                cb(prop["new_value"])
+
+        if all_ignored:
+            logging.debug(f"Changes of {node_id} properties ignored")
             return
 
         self.vsd_client.last_graph_change = datetime.now()
@@ -143,7 +152,13 @@ class VSDClient:
         self._client = CommunicationBackend(host, port)
 
         self.ignored_property_changes = []
+        self.prop_change_callback = {}
         self.last_graph_change = datetime.now()
+
+    def clean_dataflow_data(self):
+        self.ignored_property_changes = []
+        self.prop_change_callback = {}
+
     async def start_listening(self):
         await self._client.initialize_client(RPCMethods(self))
         logging.info("Start listening for messages from pipeline manager")
@@ -457,6 +472,21 @@ class VSDClient:
                     (graph_id, node_id, prop["id"])
                 )
                 logging.debug("Ignoring: {} {}".format(node_id, prop["id"]))
+                break
+
+    async def _add_property_callback(self, graph_id, node_id, prop_name, callback):
+        resp = await self._client.request(
+            'properties_get',
+            { "graph_id": graph_id, "node_id": node_id }
+        )
+
+        for prop in resp['result']:
+            if prop["name"] == prop_name:
+                # Set the callback for found property
+                self.prop_change_callback[(graph_id, node_id, prop["id"])] = callback
+                # Set the initial value read from the graph
+                callback(prop["value"])
+                logging.debug(f"Set callback for change in: {node_id} {prop['id']}")
                 break
 
 
