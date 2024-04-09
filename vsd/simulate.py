@@ -87,17 +87,15 @@ def register_led_callback(machine, source, repl_label, callback):
     led.StateChanged += (callback)
 
 
-def create_temperature_callback(source, repl_label):
-    from pyrenode3.wrappers import Monitor
-    monitor = Monitor()
+def create_temperature_callback(machine, source, repl_label):
+    from Antmicro.Renode.Peripherals.Sensor import ITemperatureSensor
+    from System import Decimal
+
+    thermometer = ITemperatureSensor(machine.internal[f"sysbus.{source}.{repl_label}"])
 
     def set_temp(new_temp):
         logging.debug(f"Setting temperature to {new_temp}")
-        command = f"sysbus.{source}.{repl_label} Temperature {new_temp}"
-        _, err = monitor.execute(command)
-        if err:
-            logging.warning(f"Error while running command '{command}': {err}")
-
+        thermometer.Temperature = Decimal(new_temp)
     return set_temp
 
 

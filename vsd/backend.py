@@ -414,7 +414,7 @@ class VSDClient:
                     logging.info(f"Creating set temperature callback to {dest.label}")
                     await self._add_property_callback(
                         graph.id, dest.id, "temperature",
-                        simulate.create_temperature_callback(source, repl_label),
+                        simulate.create_temperature_callback(machine, source, repl_label),
                     )
                     # Ignore this property, because it shouldn't trigger Zephyr building on change.
                     await self._ignore_property(graph.id, dest.id, "active")
