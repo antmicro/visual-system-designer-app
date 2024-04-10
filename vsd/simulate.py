@@ -75,10 +75,19 @@ def prepare_renode_files(board_name: str,
 
 def prepare_simulation(board_name, elf_path, repl_path):
     from pyrenode3.wrappers import Emulation
+
     emu = Emulation()
     machine = emu.add_mach('machine0')
-    machine.load_repl(str(repl_path.absolute()))
-    machine.load_elf(str(elf_path.absolute()))
+
+    try:
+        machine.load_repl(str(repl_path.absolute()))
+        machine.load_elf(str(elf_path.absolute()))
+    except Exception as e:
+        # Save the error now, because it is impossible to read after the emulation is cleared.
+        error = str(e)
+        emu.clear()
+        raise Exception(error)
+
     return emu, machine
 
 
