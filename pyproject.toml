@@ -13,7 +13,7 @@ authors = [{name = "Antmicro Ltd.", email = "contact@antmicro.com"}]
 description = "Visual System Designer application"
 dependencies = [
     "pyrenode3[all]   @ git+https://github.com/antmicro/pyrenode3@e74fed065cf3a49beeaa94fd5bf2d72b8b7e1988",
-    "pipeline-manager @ git+https://github.com/antmicro/kenning-pipeline-manager@f7550ffb0010ed29352bf35efe61d785e907ace5",
+    "pipeline-manager @ git+https://github.com/antmicro/kenning-pipeline-manager@0b8fffc24c7721d09da728c6c9bcd37a45092d26",
     "pipeline-manager-backend-communication @ git+https://github.com/antmicro/kenning-pipeline-manager-backend-communication@eb690cfb7766bfbd85a4eff2a1e809573b8b72d0",
 
     # XXX: dts2repl version should be synced with the Renode version (which is
