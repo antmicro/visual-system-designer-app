@@ -34,7 +34,7 @@ class Specification():
         self.categories = categories
         self.abstract = abstract
 
-    def get_node_spec(self, node_name):
+    def get_node_spec(self, node_name, resolve=True):
         if node_name in self.nodes:
             logging.debug(f"{node_name} is a node.")
             node = self.nodes[node_name]
@@ -43,13 +43,13 @@ class Specification():
             node = self.categories[node_name]
         elif node_name in self.abstract:
             logging.debug(f"{node_name} is an abstract node.")
-            return None
+            return self.abstract[node_name]
         else:
             logging.warning(f"Node {node_name} not found.")
             return None
 
         # XXX: maybe resolve on more levels?
-        if 'extends' in node:
+        if resolve and 'extends' in node:
             for ext_name in node['extends']:
                 if ext_name in self.abstract:
                     node = {**node, **self.abstract[ext_name]}
@@ -58,6 +58,48 @@ class Specification():
                 else:
                     logging.warning(f"Not found the extend node: {ext_name}")
         return node
+
+    def _add_node(self, node):
+        if node.get('isCategory', False):
+            self.categories[node['category'].split("/")[-1]] = node
+            return
+
+        if node.get('abstract', False):
+            self.abstract[node['name']] = node
+            return
+
+        self.nodes[node['name']] = node
+        self.spec_json["nodes"].append(node)
+
+
+    def _modify_node(self, node, add_interfaces, add_properties):
+        if add_interfaces:
+            if "interfaces" not in node:
+                node["interfaces"] = add_interfaces
+            else:
+                node["interfaces"].extend(add_interfaces)
+
+        if add_properties:
+            if "properties" not in node:
+                node["properties"] = add_properties
+            else:
+                node["properties"].extend(add_properties)
+
+    def modify(self, modifications):
+        for key, value in modifications.get("metadata", {}).items():
+            self.spec_json["metadata"][key] = value
+
+        for node in modifications.get("add_nodes", []):
+            self._add_node(node)
+
+        for mod in modifications.get("mods", []):
+            add_interfaces = mod.get("add_interfaces")
+            add_properties = mod.get("add_properties")
+            for name in mod["names"]:
+                if node := self.get_node_spec(name, resolve=False):
+                    self._modify_node(node, add_interfaces, add_properties)
+                else:
+                    logging.warning(f"node {{name:{name}}} doesn't exist")
 
     def get_socs(self):
         soc_names = []
