@@ -72,6 +72,8 @@ Options:
   --website-port INTEGER      [default: 9000]
   --vsd-backend-host TEXT     [default: 127.0.0.1]
   --vsd-backend-port INTEGER  [default: 5000]
+  --remote / --no-remote      [default: no-remote]
+  --spec-mod PATH
   --verbosity TEXT            [default: INFO]
 ```
 
@@ -85,6 +87,89 @@ Visual System Designer is also capable of running a Zephyr demo application base
 To build Zephyr on the current graph use the "Build" button.
 After the build has succeeded, simulation may be run using the "Run simulation" button.
 The build logs and Zephyr console output are available in dedicated terminals on the bottom of the screen.
+
+### Modifying specification
+
+If you want to add some new nodes to the specification or modify existing ones you have to define a JSON file with such modifications.
+An example file (with modifications needed while running VSD interactively) is present in [vsd/spec_mods/interactive.json](./vsd/spec_mods/interactive.json).
+After defining such files you must specify their paths while starting VSD app (they will be applied in the order they were specified):
+
+```
+vsd run --spec-mod mod1.json --spec-mod mod2.json
+# or
+vsd prepare-zephyr-board board-graph.json --spec-mod mod1.json --spec-mod mod2.json
+```
+
+To modify specification without running VSD app you may use [tools/modify_specification.py](./tools/modify_specification.py) script.
+
+#### Specification modifications file format
+
+On the high level, the JSON file, which contains the description of modifications, has three keys:
+
+* `"metadata"` -- each field specified here will replace the one in metadata of original specification
+* `"add_nodes"` -- new nodes will be directly added to the original specification
+* `"mods"` -- each entry in this section describes how to modify a group of nodes specified in `"names"` list:
+  - `"add_property"` -- properties specified here will be added to all specified nodes
+  - `"add_interface"` -- interfaces specified here will be added to all specified nodes
+
+Example file:
+```JSON
+{
+    "metadata": {
+        "notifyWhenChanged": true
+    },
+    "add_nodes": [
+        {
+            "abstract": false,
+            "category": "Category/SomeNode",
+            "name": "SomeNode",
+            "properties": [
+                {
+                    "default": "",
+                    "name": "property1",
+                    "type": "text"
+                }
+            ],
+            "interfaces": [
+                {
+                    "direction": "inout",
+                    "maxConnectionsCount": -1,
+                    "name": "interface1",
+                    "side": "left",
+                    "type": "interface1"
+                }
+            ]
+        }
+    ],
+    "mods": [
+        {
+            "names": ["LED"],
+            "add_properties": [
+                    {
+                        "default": false,
+                        "name": "active",
+                        "type": "bool"
+                    }
+            ]
+        },
+        {
+            "names": [
+                "bme280",
+                "sht4xd",
+                "tmp108",
+                "si7210"
+            ],
+            "add_properties": [
+                {
+                    "default": 20.0,
+                    "name": "temperature",
+                    "type": "number"
+                }
+            ]
+        }
+    ]
+}
+```
 
 ## Using VSD from command line
 
