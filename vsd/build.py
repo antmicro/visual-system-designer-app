@@ -13,7 +13,7 @@ import yaml
 
 from importlib.resources import files
 from pathlib import Path
-from typing import Tuple
+from typing import List, Optional, Tuple
 
 from vsd import env
 from vsd.generate import generate_app
@@ -320,6 +320,7 @@ def ask_when_app_exists(app):
 def prepare_zephyr_app(graph_file: Path,
                        app: Path,
                        from_template: Path = None,
+                       spec_mod: Optional[List[Path]] = None,
                        force: bool = False):
     """
     Creates Zephyr application ready to be simulated:
@@ -333,6 +334,11 @@ def prepare_zephyr_app(graph_file: Path,
         graph_json = json.load(f)
 
     specification = Specification(workspace / "visual-system-designer-resources/components-specification.json")
+
+    if spec_mod:
+        for mod in spec_mod:
+            specification.modify(json.load(open(mod)))
+
     graph = Graph(graph_json, specification)
 
     try:
