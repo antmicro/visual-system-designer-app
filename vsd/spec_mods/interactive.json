@@ -1,0 +1,44 @@
+{
+    "metadata": {
+        "notifyWhenChanged": true,
+        "navbarItems": [
+            {
+                "name": "Build",
+                "iconName": "build.svg",
+                "procedureName": "custom_build"
+            },
+            {
+                "name": "Run simulation",
+                "iconName": "Run",
+                "procedureName": "dataflow_run"
+            }
+        ]
+    },
+    "mods": [
+        {
+            "names": ["LED"],
+            "add_properties": [
+                    {
+                        "default": false,
+                        "name": "active",
+                        "type": "bool"
+                    }
+            ]
+        },
+        {
+            "names": [
+                "bme280",
+                "sht4xd",
+                "tmp108",
+                "si7210"
+            ],
+            "add_properties": [
+                {
+                    "default": 20.0,
+                    "name": "temperature",
+                    "type": "number"
+                }
+            ]
+        }
+    ]
+}

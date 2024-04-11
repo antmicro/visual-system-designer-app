@@ -13,10 +13,12 @@ import signal
 import sys
 
 from datetime import datetime
+from importlib.resources import files
+from itertools import chain
 from multiprocessing import Process
 from pathlib import Path
 from time import sleep
-from typing import Dict
+from typing import Dict, List, Optional
 
 from pipeline_manager_backend_communication.communication_backend import CommunicationBackend
 from pipeline_manager_backend_communication.misc_structures import MessageType
@@ -144,7 +146,7 @@ class VSDLogHandler(logging.Handler):
 
 
 class VSDClient:
-    def __init__(self, host, port, workspace, app_path, app_type):
+    def __init__(self, host, port, workspace, app_path, app_type, spec_mods):
         self.specification = Specification(workspace / "visual-system-designer-resources/components-specification.json")
         self.workspace = workspace
         self.stop_simulation_event = asyncio.Event()
@@ -159,14 +161,8 @@ class VSDClient:
         self.prop_change_callback = {}
         self.last_graph_change = datetime.now()
 
-        self._supported_thermometers = [
-            "Sensor/Environmental/bme280",
-            "Sensor/Environmental/sht4xd",
-            "Sensor/Environmental/Temperature/tmp108",
-            "Sensor/Hall/si7210",
-        ]
-
-        self.adjust_specification()
+        for mod in spec_mods:
+            self.specification.modify(mod)
 
     def clean_dataflow_data(self):
         self.ignored_property_changes = []
@@ -243,47 +239,6 @@ class VSDClient:
             'type': MessageType.OK.value,
             'content': msg
         }
-
-    def adjust_specification(self):
-        # Add property for LEDs indicating if they are active
-        for node in self.specification.spec_json["nodes"]:
-            if "category" not in node:
-                continue
-
-            if node["category"] == "IO/LED":
-                node["properties"].append(
-                    {
-                        "default": False,
-                        "name": "active",
-                        "type": "bool"
-                    }
-                )
-
-            if node["category"] in self._supported_thermometers:
-                node["properties"].append(
-                    {
-                        "default": 20.0,
-                        "name": "temperature",
-                        "type": "number"
-                    }
-                )
-
-        self.specification.spec_json["metadata"]["notifyWhenChanged"] = True
-
-        # Set custom buttons on navigation bar
-        if "navbarItems" not in self.specification.spec_json["metadata"]:
-            self.specification.spec_json["metadata"]["navbarItems"] = [
-                {
-                    "name": "Build",
-                    "iconName": "build.svg",
-                    "procedureName": "custom_build"
-                },
-                {
-                    "name": "Run simulation",
-                    "iconName": "Run",
-                    "procedureName": "dataflow_run"
-                },
-            ]
 
     def handle_specification_get(self):
         return self._ok(self.specification.spec_json)
@@ -557,12 +512,13 @@ async def shutdown(loop):
     loop.stop()
 
 
-def start_vsd_backend(host, port, workspace, app_path, app_type):
+def start_vsd_backend(host, port, workspace, app_path, app_type, spec_mods):
     """
     Initializes the client and runs its asyncio event loop until it is interrupted.
     Doesn't return, if signal is caught whole process exits.
     """
-    client = VSDClient(host, port, workspace, app_path, app_type)
+    spec_mods = (json.load(open(p)) for p in chain([files('vsd.spec_mods').joinpath('interactive.json')], spec_mods))
+    client = VSDClient(host, port, workspace, app_path, app_type, spec_mods)
 
     loop = asyncio.get_event_loop()
 
@@ -583,6 +539,7 @@ def start_vsd_app(app: Path = None,
                   website_port: int = 9000,
                   vsd_backend_host: str = "127.0.0.1",
                   vsd_backend_port: int = 5000,
+                  spec_mod: Optional[List[Path]] = None,
                   verbosity: str = "INFO"):
     """
     Start VSD application.
@@ -627,4 +584,4 @@ def start_vsd_app(app: Path = None,
     sleep(0.5)
 
     # XXX: This function won't return.
-    start_vsd_backend(vsd_backend_host, vsd_backend_port, workspace, app_path, app_type)
+    start_vsd_backend(vsd_backend_host, vsd_backend_port, workspace, app_path, app_type, spec_mod)
