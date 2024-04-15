@@ -303,7 +303,7 @@ class VSDClient:
             board_name: str
             binaries: Dict
         """
-        board_name = re.sub('\s', '_', graph.name)
+        board_name = re.sub(r'[\s\-+]', '_', graph.name)
         build_dir = self.workspace / 'builds' / board_name
 
         def up_to_date(path):
@@ -466,7 +466,7 @@ class VSDClient:
         soc, connections = graph.get_soc_with_connections()
 
         soc_name = soc.rdp_name
-        board_name = re.sub('\s', '_', graph.name)
+        board_name = re.sub(r'[\s\-+]', '_', graph.name)
 
         board_dir = build.prepare_zephyr_board_dir(board_name, soc_name, connections, self.workspace)
         if not board_dir:

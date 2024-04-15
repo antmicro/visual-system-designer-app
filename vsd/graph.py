@@ -112,7 +112,7 @@ class Graph():
             if not name:
                 name = "Untitled_graph"
 
-        self.name = re.sub("\s", "_", name)
+        self.name = re.sub(r"[\s\-+]", "_", name)
         self.id = graph_json['graph']['id']
 
         for edge in graph_json['graph']['connections']:
