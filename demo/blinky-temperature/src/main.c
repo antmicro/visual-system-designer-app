@@ -45,7 +45,7 @@ static const char *all_sensor_names[] = {
 	DT_FOREACH_NODE(GET_SENSOR_NAME)
 };
 
-static char is_themometer[ARRAY_SIZE(all_sensor_devices)];
+static bool is_thermometer[ARRAY_SIZE(all_sensor_devices)];
 static bool led_state[ARRAY_SIZE(leds)];
 
 int read_temperature(const struct device *dev, struct sensor_value *val)
@@ -120,7 +120,7 @@ int main(void)
 		const struct device *const dev = all_sensor_devices[i];
 		if (strcmp(all_sensor_names[i], "thermometer") == 0) {
 			printf("Found thermometer: %s (dev address: %p)\n", dev->name, dev);
-			is_themometer[i] = 1;
+			is_thermometer[i] = true;
 		}
 		if (!device_is_ready(dev)) {
 			printf("Device %s is not ready\n", dev->name);
@@ -171,7 +171,7 @@ int main(void)
 	while (1) {
 		for (int i = 0; i < ARRAY_SIZE(all_sensor_devices); i++) {
 			const struct device *const dev = all_sensor_devices[i];
-			if (!is_themometer[i]) {
+			if (!is_thermometer[i]) {
 				continue;
 			}
 			ret = read_temperature(dev, &value);
