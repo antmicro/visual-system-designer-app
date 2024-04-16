@@ -46,6 +46,7 @@ static const char *all_sensor_names[] = {
 };
 
 static char is_themometer[ARRAY_SIZE(all_sensor_devices)];
+static bool led_state[ARRAY_SIZE(leds)];
 
 int read_temperature(const struct device *dev, struct sensor_value *val)
 {
@@ -112,6 +113,7 @@ int main(void)
 			printf("Failed to configure LED %s\n", led_names[i]);
 			return 0;
 		}
+		led_state[i] = true;
 	}
 
 	for (int i = 0; i < ARRAY_SIZE(all_sensor_devices); i++) {
@@ -186,8 +188,11 @@ int main(void)
 			if (ret < 0) {
 				printf("Failed to toggle LED %s state\n", led_names[i]);
 			}
-			/* Uncomment to see verbose LED state. */
-			printk("LED %s state: %d\n", led_names[i], gpio_pin_get_dt(led));
+
+			/* Update led state */
+			led_state[i] = !led_state[i];
+
+			printk("LED %s state: %d\n", led_names[i], led_state[i]);
 		}
 
 		k_sleep(K_MSEC(1000));
