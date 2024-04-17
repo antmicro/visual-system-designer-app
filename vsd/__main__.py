@@ -11,7 +11,7 @@ from typing import Optional
 
 from vsd.build import build_zephyr, prepare_zephyr_board
 from vsd.backend import start_vsd_app
-from vsd.simulate import prepare_renode_files, simulate
+from vsd.simulate import simulate
 from vsd.init import init, vsd_workspace_info
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
@@ -21,8 +21,6 @@ app.command()(init)
 app.command()(prepare_zephyr_board)
 
 app.command()(build_zephyr)
-
-app.command()(prepare_renode_files)
 
 app.command()(simulate)
 

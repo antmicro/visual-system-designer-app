@@ -478,7 +478,7 @@ class VSDClient:
 
         logging.info(f"Application build files available in {build_dir}")
 
-        ret = simulate.prepare_renode_files(board_name, self.templates)
+        ret = simulate.prepare_renode_files(board_name, self.workspace, self.templates)
         if ret != 0:
             logging.error("Failed to create files needed by Renode.")
             return False

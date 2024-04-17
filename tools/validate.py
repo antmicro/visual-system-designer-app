@@ -249,7 +249,7 @@ def validate(soc, config, spec, app, workspace, zephyr_base):
     else:
         return status
 
-    prep_ret = simulate.prepare_renode_files(board_name)
+    prep_ret = simulate.prepare_renode_files(board_name, workspace)
     if prep_ret != 0:
         return status
 

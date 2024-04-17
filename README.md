@@ -96,7 +96,6 @@ Available commands:
 
 - `prepare-zephyr-board` -- prepare Zephyr board configuration based on given graph
 - `build-zephyr` -- build Zephyr for board of given name (previously prepared from graph)
-- `prepare-renode-files` -- prepare Renode files needed to run simulation using build results
 - `simulate` -- start simulation of prepared application
 
 To get more information about arguments and options for each command run it with `--help` option.
@@ -111,7 +110,6 @@ To prepare and run the demo in the shell execute following commands:
 ```
 vsd prepare-zephyr-board demo/stm32-led-thermometer.json
 vsd build-zephyr demo-blinky-temp --app-path demo/blinky-temperature
-vsd prepare-renode-files demo-blinky-temp
 vsd simulate demo-blinky-temp
 ```
 

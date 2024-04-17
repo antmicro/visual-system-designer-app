@@ -28,10 +28,9 @@ def _prepare_repl(dts_path, repl_path):
     return True
 
 
-@env.setup_env
 def prepare_renode_files(board_name: str,
+                         workspace: Path,
                          templates_dir: Path = files('vsd.templates').joinpath("")):
-    workspace = Path(env.get_workspace())
     builds_dir = workspace / 'builds' / board_name
     dts_path = builds_dir / "zephyr/zephyr.dts"
     elf_path = builds_dir / "zephyr/zephyr.elf"
@@ -181,11 +180,19 @@ class ConsoleCallbackPool():
 
 @env.setup_env
 def simulate(board_name: str):
+    """
+    Start simulation on the board prepared by previous steps.
+    """
     workspace = Path(env.get_workspace())
     builds_dir = workspace / 'builds' / board_name
     repl_path = builds_dir / f"{board_name}.repl"
     elf_path = builds_dir / "zephyr/zephyr.elf"
     dts_path = builds_dir / "zephyr/zephyr.dts"
+
+    ret = prepare_renode_files(board_name, workspace)
+    if ret != 0:
+        logging.error("Files needed for the simulation can't be prepared")
+        sys.exit(1)
 
     try:
         emu, machine = prepare_simulation(board_name, elf_path, repl_path)
