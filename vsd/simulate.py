@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-import re
 import sys
 
 from dts2repl import dts2repl
@@ -10,6 +9,7 @@ from importlib.resources import files
 from pathlib import Path
 
 from vsd import env
+from vsd.utils import find_chosen
 
 
 def _prepare_from_template(format, template, dest):
@@ -26,15 +26,6 @@ def _prepare_repl(dts_path, repl_path):
     with open(repl_path, 'w') as f:
         f.write(repl)
     return True
-
-
-def _find_chosen(name, dts_path):
-    with open(dts_path, 'r') as f:
-        dts = f.read()
-    console_m = re.search(f'{name} = &(.+);', dts)
-    if not console_m:
-        return None
-    return console_m.group(1)
 
 
 @env.setup_env
@@ -54,7 +45,7 @@ def prepare_renode_files(board_name: str,
         'elf_path': elf_path.absolute(),
     }
 
-    zephyr_console = _find_chosen("zephyr,console", dts_path)
+    zephyr_console = find_chosen("zephyr,console", dts_path)
     if zephyr_console:
         format['console'] = zephyr_console
 
@@ -207,7 +198,7 @@ def simulate(board_name: str):
 
     all_uarts = get_all_uarts(machine)
     if len(all_uarts) > 0:
-        zephyr_console = _find_chosen('zephyr,console', dts_path)
+        zephyr_console = find_chosen('zephyr,console', dts_path)
         for uart, name in get_all_uarts(machine):
             register_uart_callback(uart, callback_pool.create_callback(uart, active=(name == zephyr_console)))
     else:

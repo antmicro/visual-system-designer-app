@@ -22,6 +22,7 @@ from vsd import env
 from vsd import simulate
 from vsd.graph import Node
 from vsd.specification import Specification
+from vsd.utils import find_chosen
 
 
 thermometers = ["si7210", "tmp108"]
@@ -200,7 +201,7 @@ def run_test(board_name, build_dir, config):
 
     tester = LineTester(test_line)
 
-    zephyr_console = simulate._find_chosen("zephyr,console", dts_path)
+    zephyr_console = find_chosen("zephyr,console", dts_path)
 
     for uart, uart_name in simulate.get_all_uarts(machine):
         if uart_name == zephyr_console:
