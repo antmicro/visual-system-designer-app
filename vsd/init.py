@@ -124,7 +124,7 @@ def build_pipeline_manager(workspace):
 def get_renode_portable(workspace):
     # NOTE: When updating the Renode version here, check if dts2repl shouldn't be updated as well.
     #       dts2repl version is recorded in pyproject.toml.
-    renode_version = "1.14.0+20240314git7ff57f373"
+    renode_version = "1.15.0+20240414gitf47548cef"
 
     portable_dir = workspace / "renode-portable"
     renode_portable = portable_dir / "renode"
