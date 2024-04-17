@@ -28,9 +28,7 @@ def _prepare_repl(dts_path, repl_path):
     return True
 
 
-def prepare_renode_files(board_name: str,
-                         workspace: Path,
-                         templates_dir: Path = files('vsd.templates').joinpath("")):
+def prepare_renode_files(board_name: str, workspace: Path):
     builds_dir = workspace / 'builds' / board_name
     dts_path = builds_dir / "zephyr/zephyr.dts"
     elf_path = builds_dir / "zephyr/zephyr.elf"
@@ -47,6 +45,8 @@ def prepare_renode_files(board_name: str,
     zephyr_console = find_chosen("zephyr,console", dts_path)
     if zephyr_console:
         format['console'] = zephyr_console
+
+    templates_dir = files("vsd.templates").joinpath("")
 
     try:
         _prepare_from_template(format, templates_dir / "run.resc", resc_path)

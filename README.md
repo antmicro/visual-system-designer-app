@@ -68,7 +68,6 @@ Usage: vsd run [OPTIONS]
 
 Options:
   --application PATH          [default: demo/blinky-temperature]
-  --templates-dir PATH        [default: vsd/templates]
   --website-host TEXT         [default: 127.0.0.1]
   --website-port INTEGER      [default: 9000]
   --vsd-backend-host TEXT     [default: 127.0.0.1]

@@ -13,7 +13,6 @@ import signal
 import sys
 
 from datetime import datetime
-from importlib.resources import files
 from multiprocessing import Process
 from pathlib import Path
 from time import sleep
@@ -144,11 +143,10 @@ class VSDLogHandler(logging.Handler):
 
 
 class VSDClient:
-    def __init__(self, host, port, workspace, app, templates_dir):
+    def __init__(self, host, port, workspace, app):
         self.specification = Specification(workspace / "visual-system-designer-resources/components-specification.json")
         self.workspace = workspace
         self.app = app
-        self.templates = templates_dir
         self.stop_simulation_event = asyncio.Event()
         self.stop_build_event = asyncio.Event()
         self._client = CommunicationBackend(host, port)
@@ -478,7 +476,7 @@ class VSDClient:
 
         logging.info(f"Application build files available in {build_dir}")
 
-        ret = simulate.prepare_renode_files(board_name, self.workspace, self.templates)
+        ret = simulate.prepare_renode_files(board_name, self.workspace)
         if ret != 0:
             logging.error("Failed to create files needed by Renode.")
             return False
@@ -551,12 +549,12 @@ async def shutdown(loop):
     loop.stop()
 
 
-def start_vsd_backend(host, port, workspace, application, templates):
+def start_vsd_backend(host, port, workspace, application):
     """
     Initializes the client and runs its asyncio event loop until it is interrupted.
     Doesn't return, if signal is caught whole process exits.
     """
-    client = VSDClient(host, port, workspace, application, templates)
+    client = VSDClient(host, port, workspace, application)
 
     loop = asyncio.get_event_loop()
 
@@ -572,7 +570,6 @@ def start_vsd_backend(host, port, workspace, application, templates):
 
 @env.setup_env
 def start_vsd_app(application: Path = Path("demo/blinky-temperature"),
-                  templates_dir: Path = files('vsd.templates').joinpath(""),
                   website_host: str = "127.0.0.1",
                   website_port: int = 9000,
                   vsd_backend_host: str = "127.0.0.1",
@@ -615,4 +612,4 @@ def start_vsd_app(application: Path = Path("demo/blinky-temperature"),
     sleep(0.5)
 
     # XXX: This function won't return.
-    start_vsd_backend(vsd_backend_host, vsd_backend_port, workspace, application, templates_dir)
+    start_vsd_backend(vsd_backend_host, vsd_backend_port, workspace, application)
