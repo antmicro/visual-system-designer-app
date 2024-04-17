@@ -16,6 +16,7 @@ from pathlib import Path
 from vsd import env
 from vsd.graph import Graph
 from vsd.specification import Specification
+from vsd.utils import find_chosen
 
 
 supported_sensors = {
@@ -153,6 +154,34 @@ def _prep_board_yaml(board_name, configs):
         }
     }
 
+def _adjust_chosen(board_dts, soc_dts):
+    default_shell_uart = (
+        find_chosen("zephyr,shell-uart", board_dts) or
+        find_chosen("zephyr,shell-uart", soc_dts)
+    )
+
+    default_console = (
+        find_chosen("zephyr,console", board_dts) or
+        find_chosen("zephyr,console", soc_dts)
+    )
+
+    if not default_shell_uart:
+        if default_console:
+            default_shell_uart = default_console
+
+    snippet = '/ {\n'
+    snippet += '\tchosen {\n'
+
+    if default_shell_uart:
+        snippet +=  f'\t\tzephyr,shell-uart = &{default_shell_uart};\n'
+
+    if default_console:
+        snippet +=  f'\t\tzephyr,shell-uart = &{default_console};\n'
+
+    snippet += '\t};\n'
+    snippet += '};\n'
+
+    return snippet
 
 def prepare_zephyr_board_dir(board_name, soc_name, connections, workspace):
     zephyr_base = Path(env.get_var('ZEPHYR_BASE'))
@@ -210,6 +239,8 @@ def prepare_zephyr_board_dir(board_name, soc_name, connections, workspace):
 
             output.write(_prep_leds(leds))
             output.write(_prep_sensors(sensors))
+
+            output.write(_adjust_chosen(board_dir / f"{board_name}.dts", soc_dir / "overlay.dts"))
 
     if "additional_files" in configs:
         for file in configs["additional_files"]:
