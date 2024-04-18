@@ -30,6 +30,7 @@ from vsd import env
 from vsd import simulate
 from vsd.specification import Specification
 from vsd.graph import Graph
+from vsd.generate import generate_app
 
 
 class RPCMethods:
@@ -143,14 +144,16 @@ class VSDLogHandler(logging.Handler):
 
 
 class VSDClient:
-    def __init__(self, host, port, workspace, app):
+    def __init__(self, host, port, workspace, app_path, app_type):
         self.specification = Specification(workspace / "visual-system-designer-resources/components-specification.json")
         self.workspace = workspace
-        self.app = app
         self.stop_simulation_event = asyncio.Event()
         self.stop_build_event = asyncio.Event()
         self._client = CommunicationBackend(host, port)
         self.terminal_uarts = {}
+
+        self.app_path = app_path
+        self.app_generate = app_type == "template"
 
         self.ignored_property_changes = []
         self.prop_change_callback = {}
@@ -454,7 +457,7 @@ class VSDClient:
             return False
 
         # Unpack the values returned from _prepare_build
-        board_dir, board_name, command = prepare_ret
+        board_dir, board_name, app_src, command = prepare_ret
 
         logging.info(f"Zephyr board configuration prepared in: {board_dir}")
         logging.info(f"To build this demo manually use the following command:\n\t{command}")
@@ -466,7 +469,7 @@ class VSDClient:
             board_name,
             print_fun,
             stop_event,
-            self.app
+            app_src
         )
         stop_event.clear()
 
@@ -493,8 +496,13 @@ class VSDClient:
         if not board_dir:
             None
 
-        command = build.compose_west_command(board_name, self.app, "<build-dir>", self.workspace)
-        return board_dir, board_name, command
+        if self.app_generate:
+            app_src = generate_app(self.app_path, board_name, connections, self.workspace)
+        else:
+            app_src = self.app_path
+
+        command = build.compose_west_command(board_name, app_src, "<build-dir>", self.workspace)
+        return board_dir, board_name, app_src, command
 
     def save_graph(self, graph_json):
         graph = Graph(graph_json, self.specification)
@@ -549,12 +557,12 @@ async def shutdown(loop):
     loop.stop()
 
 
-def start_vsd_backend(host, port, workspace, application):
+def start_vsd_backend(host, port, workspace, app_path, app_type):
     """
     Initializes the client and runs its asyncio event loop until it is interrupted.
     Doesn't return, if signal is caught whole process exits.
     """
-    client = VSDClient(host, port, workspace, application)
+    client = VSDClient(host, port, workspace, app_path, app_type)
 
     loop = asyncio.get_event_loop()
 
@@ -569,7 +577,8 @@ def start_vsd_backend(host, port, workspace, application):
 
 
 @env.setup_env
-def start_vsd_app(application: Path = Path("demo/blinky-temperature"),
+def start_vsd_app(app: Path = None,
+                  app_template: str = None,
                   website_host: str = "127.0.0.1",
                   website_port: int = 9000,
                   vsd_backend_host: str = "127.0.0.1",
@@ -587,6 +596,12 @@ def start_vsd_app(application: Path = Path("demo/blinky-temperature"),
     """
 
     logging.basicConfig(level=verbosity, format="%(levelname)s:VSD backend:\t%(message)s")
+
+    try:
+        app_path, app_type = build.determine_app_type(app, app_template)
+    except build.InitError as e:
+        logging.error(e)
+        sys.exit(1)
 
     workspace = Path(env.get_workspace())
     frontend_dir = workspace / ".pipeline_manager/frontend"
@@ -612,4 +627,4 @@ def start_vsd_app(application: Path = Path("demo/blinky-temperature"),
     sleep(0.5)
 
     # XXX: This function won't return.
-    start_vsd_backend(vsd_backend_host, vsd_backend_port, workspace, application)
+    start_vsd_backend(vsd_backend_host, vsd_backend_port, workspace, app_path, app_type)
