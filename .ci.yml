@@ -118,11 +118,13 @@ validate-setup:
     - *init-venv
     - *init-workspace
     # Build app on demo graph
-    - vsd prepare-zephyr-board demo/stm32-led-thermometer.json
-    - vsd build-zephyr demo_blinky_temp
-
+    - vsd prepare-zephyr-app demo/stm32-led-thermometer.json demo/blinky-temperature
     # We expect that the simulation will succeed and run forever. In that case, timeout
     # command would kill the simulation after 20 seconds and return 124 indicating timeout.
+    - timeout --signal=SIGINT 20 vsd simulate demo_blinky_temp || test $? -eq 124
+
+    # Check the app generated from template in the same way
+    - vsd prepare-zephyr-app demo/stm32-led-thermometer.json blinky-from-template --from-template demo/templates/blinky-temperature --force
     - timeout --signal=SIGINT 20 vsd simulate demo_blinky_temp || test $? -eq 124
   artifacts:
     paths:
