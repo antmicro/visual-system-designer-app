@@ -11,9 +11,12 @@ import shutil
 import sys
 import yaml
 
+from importlib.resources import files
 from pathlib import Path
+from typing import Tuple
 
 from vsd import env
+from vsd.generate import generate_app
 from vsd.graph import Graph
 from vsd.specification import Specification
 from vsd.utils import find_chosen
@@ -25,6 +28,11 @@ supported_sensors = {
     'silabs_si7210': 'thermometer',
     'ti_tmp108': 'thermometer',
 }
+
+
+class InitError(Exception):
+    pass
+
 
 def _prep_kconfig_board(board_name, configs):
     content = ""
@@ -183,6 +191,33 @@ def _adjust_chosen(board_dts, soc_dts):
 
     return snippet
 
+def determine_app_type(app: Path, app_template: str) -> Tuple[Path, str]:
+    """
+    Determine if we are going to build the app from sources, or generate it's sources first.
+    Returns path to the directory with app sources, and string which determines if it is a
+    template application or full application sources.
+    """
+    if not any([app, app_template]) or all([app, app_template]):
+        raise InitError("Exactly one of --app or --app-template must be specified")
+
+    if app_template:
+        templates_dir = files('vsd.templates').joinpath("")
+        default_path = templates_dir / "apps" / app_template
+        if default_path.exists():
+            return default_path, "template"
+
+        app_template = Path(app_template)
+        if app_template.exists():
+            return app_template, "template"
+
+        raise InitError(f"Can't find app template {app_template}")
+
+    if not app.exists():
+        raise InitError(f"Can't find app sources {app}")
+
+    return app, "sources"
+
+
 def prepare_zephyr_board_dir(board_name, soc_name, connections, workspace):
     zephyr_base = Path(env.get_var('ZEPHYR_BASE'))
     socs_dir = workspace / "visual-system-designer-resources/zephyr-data/socs"
@@ -279,7 +314,21 @@ def compose_west_command(board_name, app_path, build_dir, boards_dir):
 
 
 @env.setup_env
-def prepare_zephyr_board(graph_file: Path):
+def prepare_zephyr_app(graph_file: Path,
+                       app: Path = None,
+                       app_template: Path = None):
+    """
+    Creates Zephyr application ready to be simulated:
+        1. Prepares board dir for generated board
+        2. Generate application directory (when --app-template argument is specified)
+        3. Build Zephyr application
+    """
+    try:
+        app_path, app_type = determine_app_type(app, app_template)
+    except InitError as e:
+        logging.error(e)
+        sys.exit(1)
+
     workspace = Path(env.get_workspace())
     with open(graph_file) as f:
         graph_json = json.load(f)
@@ -288,20 +337,34 @@ def prepare_zephyr_board(graph_file: Path):
     graph = Graph(graph_json, specification)
 
     try:
-        soc, connections = graph.get_soc_with_connections()
+        soc, soc_connections = graph.get_soc_with_connections()
     except KeyError as e:
         logging.error(str(e))
         sys.exit(1)
 
     soc_name = soc.rdp_name
-
     board_name = re.sub(r'[\s\-+]', '_', graph.name)
-    logging.info(f"Creating zephyr board named '{board_name}'")
 
-    board_dir = prepare_zephyr_board_dir(board_name, soc_name, connections, workspace)
+    board_dir = prepare_zephyr_board_dir(board_name, soc_name, soc_connections, workspace)
     if not board_dir:
         sys.exit(1)
-    logging.info(f"Created board configuration in {board_dir}")
+
+    logging.info(f"Prepared board configuration in {board_dir.relative_to(Path.cwd())}")
+
+    if app_type == "template":
+        app_dir = generate_app(app_path, board_name, soc_connections, workspace)
+        if not app_dir:
+            logging.error("Failed to generate application")
+            sys.exit(1)
+    else:
+        app_dir = app_path
+
+    ret, build_dir = build_zephyr(board_name, app_dir)
+    if ret != 0:
+        logging.error("Zephyr build failed")
+        sys.exit(1)
+
+    print(f"Successfully build the {app_dir} application on `{board_name}`.")
 
 
 def build_zephyr(board_name: str,
