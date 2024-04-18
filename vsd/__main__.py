@@ -9,7 +9,7 @@ import typer
 
 from typing import Optional
 
-from vsd.build import build_zephyr, prepare_zephyr_board
+from vsd.build import prepare_zephyr_app
 from vsd.backend import start_vsd_app
 from vsd.simulate import simulate
 from vsd.init import init, vsd_workspace_info
@@ -18,9 +18,7 @@ app = typer.Typer(no_args_is_help=True, add_completion=False)
 
 app.command()(init)
 
-app.command()(prepare_zephyr_board)
-
-app.command()(build_zephyr)
+app.command()(prepare_zephyr_app)
 
 app.command()(simulate)
 
