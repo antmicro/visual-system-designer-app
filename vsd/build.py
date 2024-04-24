@@ -19,7 +19,7 @@ from vsd import env
 from vsd.generate import generate_app
 from vsd.graph import Graph
 from vsd.specification import Specification
-from vsd.utils import find_chosen
+from vsd.utils import filter_nodes, find_chosen
 
 
 supported_sensors = {
@@ -58,17 +58,6 @@ def _prep_defconfig(configs, zephyr_dir):
         defconfig += "\n".join(configs["add_defconfig_flags"]) + "\n"
 
     return defconfig
-
-
-def _filter_nodes(connections, filter_fn):
-    leds, other = [], []
-    for conn in connections:
-        _, _, component = conn
-        if filter_fn(component):
-            leds.append(conn)
-        else:
-            other.append(conn)
-    return leds, other
 
 
 def _enable_iface(interface):
@@ -255,14 +244,14 @@ def prepare_zephyr_board_dir(board_name, soc_name, connections, workspace):
             with open(soc_dir / 'overlay.dts') as input:
                 shutil.copyfileobj(input, output)
 
-            leds, connections = _filter_nodes(
+            leds, connections = filter_nodes(
                 connections,
-                lambda node: node.category.startswith("IO/LED")
+                lambda if_name, if_type, node: node.category.startswith("IO/LED")
             )
 
-            sensors, connections = _filter_nodes(
+            sensors, connections = filter_nodes(
                 connections,
-                lambda node: node.rdp_name in supported_sensors
+                lambda if_name, if_type, node: node.rdp_name in supported_sensors
             )
 
             if len(connections) > 0:

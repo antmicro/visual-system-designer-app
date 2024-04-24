@@ -6,6 +6,7 @@ import shutil
 import yaml
 
 from collections import defaultdict
+from vsd.utils import filter_nodes
 
 
 supported_sensors = {
@@ -15,16 +16,6 @@ supported_sensors = {
     'ti_tmp108': 'thermometer',
 }
 
-
-def _filter_nodes(connections, filter_fn):
-    filtered, other = [], []
-    for conn in connections:
-        _, _, component = conn
-        if filter_fn(component):
-            filtered.append(component)
-        else:
-            other.append(conn)
-    return filtered, other
 
 
 def translate_code_snippet(snippet):
@@ -57,13 +48,13 @@ def generate_app(app_template_path, board_name, connections, workspace):
         nodes_templates = yaml.safe_load(f)
 
     # Parse graph and get nodes that will be generated
-    leds, connections = _filter_nodes(
+    leds, connections = filter_nodes(
         connections,
-        lambda node: node.category.startswith("IO/LED")
+        lambda if_name, if_type, node: node.category.startswith("IO/LED")
     )
-    thermometers, connections = _filter_nodes(
+    thermometers, connections = filter_nodes(
         connections,
-        lambda node: node.rdp_name in supported_sensors and supported_sensors[node.rdp_name] == "thermometer"
+        lambda if_name, if_type, node: node.rdp_name in supported_sensors and supported_sensors[node.rdp_name] == "thermometer"
     )
     nodes = [
         *zip(leds, itertools.repeat("led")), 
