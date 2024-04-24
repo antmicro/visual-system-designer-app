@@ -302,22 +302,32 @@ def compose_west_command(board_name, app_path, build_dir, boards_dir):
     return cmd
 
 
+def ask_when_app_exists(app):
+    if app.exists():
+        print(
+            f"The {app} directory already exists and VSD will override it's contents. "
+            "If you want to override the existing directory specify --force argument next time."
+        )
+
+        choice = input("Do you want to override the contents of it now? (Y/n) ")
+        if choice.lower() not in ["y", "yes"]:
+            return False
+
+    return True
+
+
 @env.setup_env
 def prepare_zephyr_app(graph_file: Path,
-                       app: Path = None,
-                       app_template: Path = None):
+                       app: Path,
+                       from_template: Path = None,
+                       force: bool = False):
     """
     Creates Zephyr application ready to be simulated:
         1. Prepares board dir for generated board
-        2. Generate application directory (when --app-template argument is specified)
+        2. Generate application directory in path specified with app argument
+            (when --from-template argument is specified)
         3. Build Zephyr application
     """
-    try:
-        app_path, app_type = determine_app_type(app, app_template)
-    except InitError as e:
-        logging.error(e)
-        sys.exit(1)
-
     workspace = Path(env.get_workspace())
     with open(graph_file) as f:
         graph_json = json.load(f)
@@ -340,20 +350,18 @@ def prepare_zephyr_app(graph_file: Path,
 
     logging.info(f"Prepared board configuration in {board_dir.relative_to(Path.cwd())}")
 
-    if app_type == "template":
-        app_dir = generate_app(app_path, board_name, soc_connections, workspace)
-        if not app_dir:
-            logging.error("Failed to generate application")
-            sys.exit(1)
-    else:
-        app_dir = app_path
+    # Generate the app when:
+    #   - the template is specified
+    #   - we got --force argument or we asked user if existing directory can be modified
+    if from_template and (force or ask_when_app_exists(app)):
+        generate_app(from_template, board_name, soc_connections, workspace, output_dir=app)
 
-    ret, build_dir = build_zephyr(board_name, app_dir)
+    ret, build_dir = build_zephyr(board_name, app)
     if ret != 0:
         logging.error("Zephyr build failed")
         sys.exit(1)
 
-    print(f"Successfully build the {app_dir} application on `{board_name}`.")
+    print(f"Successfully build the {app} application on `{board_name}`.")
 
 
 def build_zephyr(board_name: str,

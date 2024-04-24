@@ -1,12 +1,9 @@
-import itertools
 import logging
 import os
-import re
 import shutil
-import yaml
 
-from collections import defaultdict
 from vsd.utils import filter_nodes
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
 supported_sensors = {
@@ -17,35 +14,13 @@ supported_sensors = {
 }
 
 
-
-def translate_code_snippet(snippet):
-    """
-    Snippets which use {% %} syntax are easier to write,
-    because we don't have to excape each { and } symbols.
-    """
-    # Replace { and } with {{ and }} (to not consume then during string formatting)
-    snippet = re.sub(r"{(?=[^%])", "{{", snippet)
-    snippet = re.sub(r"(?<=[^%])}", "}}", snippet)
-
-    # Replace "{% label %}" with "{label}"
-    snippet = re.sub(r"{% *([\w_]+) *%}", r"{\1}", snippet)
-
-    return snippet
-
-
-def generate_code_snippets(label, snippets_templates, code_snippets):
-    # Add snippet with definition of dts node label
-    code_snippets['discover'].append(f"#define __{label.upper()}_NODE DT_NODELABEL({label})")
-
-    # Generate snippets read from template dir for given node type
-    for name, template in snippets_templates.items():
-        code_snippets[name].append(
-            template.format(name=f"__{label}", name_caps=f"__{label.upper()}"))
-
-
-def generate_app(app_template_path, board_name, connections, workspace):
-    with open(app_template_path / "nodes.yml") as f:
-        nodes_templates = yaml.safe_load(f)
+def generate_app(app_template_path, board_name, connections, workspace, output_dir=None):
+    template_env = Environment(
+        autoescape=select_autoescape(),
+        line_statement_prefix="//!",
+        line_comment_prefix="///",
+        loader=FileSystemLoader(app_template_path),
+    )
 
     # Parse graph and get nodes that will be generated
     leds, connections = filter_nodes(
@@ -56,45 +31,33 @@ def generate_app(app_template_path, board_name, connections, workspace):
         connections,
         lambda if_name, if_type, node: node.rdp_name in supported_sensors and supported_sensors[node.rdp_name] == "thermometer"
     )
-    nodes = [
-        *zip(leds, itertools.repeat("led")), 
-        *zip(thermometers, itertools.repeat("thermometer")), 
-    ]
-
-    code_snippets = defaultdict(list)
-
-    snippets_templates = nodes_templates["snippet templates"]
-    for node_templates in snippets_templates.values():
-        for k in node_templates:
-            node_templates[k] = translate_code_snippet(node_templates[k])
-
-    # Generate app source in 'workspace/generated' directory
-    for node, node_type in nodes:
-        label = node.label
-        generate_code_snippets(label, snippets_templates[node_type], code_snippets)
-
-    # Create one snippet for each key, by joining individual snippets with new lines
-    code_snippets = {
-        key: "\n".join(snippets) for key, snippets in code_snippets.items()
-    }
 
     app_name = app_template_path.name
-    generated_dir = workspace / "generated" / f"{board_name}_{app_name}"
+    generated_dir = output_dir or (workspace / "generated" / f"{board_name}_{app_name}")
     logging.info(f"Generating app sources in {generated_dir}")
 
     if generated_dir.exists():
+        logging.info(f"The {generated_dir} directory will be cleaned before generating the application code in it.")
         shutil.rmtree(generated_dir)
 
     os.makedirs(generated_dir)
 
-    shutil.copy(app_template_path / "prj.conf", generated_dir / "prj.conf")
-    shutil.copy(app_template_path / "CMakeLists.txt", generated_dir / "CMakeLists.txt")
-    shutil.copytree(app_template_path / "src", generated_dir / "src")
+    context = {
+        "all_labels": list(map(lambda x: x[2].label, leds)) + list(map(lambda x: x[2].label, thermometers)),
+        "leds": list(map(lambda x: x[2].label, leds)),
+        "thermometers": list(map(lambda x: x[2].label, thermometers)),
+    }
 
-    with open(app_template_path / "src/main.c") as f:
-        main_template = f.read()
+    for file in app_template_path.glob("**/*"):
 
-    with open(generated_dir / "src/main.c", "w+") as f:
-        f.write(main_template.format(**code_snippets))
+        rel_path = file.relative_to(app_template_path)
 
+        if file.is_file():
+            template = template_env.get_template(str(rel_path))
+            with open(generated_dir / rel_path, "w+") as f:
+                f.write(template.render(context))
+        elif file.is_dir():
+            os.makedirs(generated_dir / rel_path)
+
+    # Return generated_dir because it is also created when output_dir argument isn't specified.
     return generated_dir
