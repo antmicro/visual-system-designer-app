@@ -11,6 +11,7 @@ import yaml
 from importlib.resources import files
 from pathlib import Path
 from typing import Optional, Annotated
+from subprocess import CalledProcessError
 
 from vsd import env
 
@@ -219,3 +220,23 @@ def vsd_workspace_info():
     max_len = max(len(x) for x in env.get_env().keys())
     for k,v in env.get_env().items():
         print(f"{k:<{max_len}}: {v}")
+
+    def git_commit_sha(dir):
+        output = subprocess.check_output(["git", "-C", str(dir), "rev-parse", "HEAD"])
+        return output.decode().strip()
+
+    print("-----------------------")
+    print(f"       Zephyr commit: {git_commit_sha(env.get_var('ZEPHYR_BASE'))}")
+    print(f"VSD resources commit: {git_commit_sha(workspace / 'visual-system-designer-resources')}")
+
+    try:
+        renode_version = subprocess.check_output([env.get_var("PYRENODE_BIN"), "--version"])
+    except CalledProcessError as e:
+        logging.error(f"Failed to get Renode version (errorcode: {e.returncode})")
+        sys.exit(e.returncode)
+    except Exception as e:
+        logging.error(f"Failed to run `renode --version` command: {e}")
+        sys.exit(1)
+
+    print("-----------------------")
+    print(renode_version.decode().strip())
