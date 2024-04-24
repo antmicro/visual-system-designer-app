@@ -8,6 +8,7 @@ import sys
 import typer
 import yaml
 
+from enum import StrEnum
 from importlib.resources import files
 from pathlib import Path
 from typing import Optional, Annotated
@@ -56,6 +57,30 @@ def get_vsd_resources(workspace):
         exit(ret.returncode)
 
 
+def check_for_modified_files(repo):
+    ret = subprocess.run(["git", "-C", str(repo), "diff-files", "--quiet"])
+    if ret.returncode != 0:
+        logging.error(
+            f"Some files in {repo} are modified. Please stash the changes before updating the repo."
+        )
+        exit(1)
+
+def update_vsd_resources(workspace):
+    resources_repo = workspace / "visual-system-designer-resources"
+    if not resources_repo.exists():
+        get_vsd_resources(workspace)
+        return
+
+    logging.info("Trying to update visual-system-designer-resources repo. ")
+    check_for_modified_files(resources_repo)
+    try:
+        subprocess.check_call(["git", "-C", str(resources_repo), "checkout", "main"])
+        subprocess.check_call(["git", "-C", str(resources_repo), "pull", "origin", "main"])
+    except CalledProcessError as e:
+        logging.error(f"Failed to update visual-system-designer-resources repository. (exitcode: {e.returncode})")
+        exit(1)
+
+
 def install_zephyr_requirements(zephyr_base):
     zephyr_requirements = str(zephyr_base / "scripts/requirements.txt")
     logging.info(f"Installing Zephyr requirements from: {zephyr_requirements}")
@@ -78,6 +103,31 @@ def init_zephyr(workspace):
         exit(ret.returncode)
 
     return workspace / "zephyr"
+
+
+def update_zephyr(zephyr_dir, zephyr_version):
+    current_zephyr_version = subprocess.check_output(["git", "-C", str(zephyr_dir), "rev-parse", "HEAD"]).decode().strip()
+
+    if current_zephyr_version == zephyr_version:
+        return
+
+    logging.info(f"Updating Zephyr to {zephyr_version}")
+    check_for_modified_files(zephyr_dir)
+    try:
+        subprocess.check_call(["git", "-C", str(zephyr_dir), "fetch", "--depth=1", "origin", zephyr_version])
+        subprocess.check_call(["git", "-C", str(zephyr_dir), "checkout", "FETCH_HEAD"])
+    except CalledProcessError as e:
+        logging.error(f"Failed to update Zephyr repository. (exitcode: {e.returncode})")
+        exit(e.returncode)
+
+    logging.info("Updating west workspace")
+    try:
+        subprocess.check_call(["west", "update"], cwd=zephyr_dir)
+    except CalledProcessError as e:
+        logging.error(f"Failed to update west workspace. (exitcode: {e.returncode})")
+        exit(e.returncode)
+
+    install_zephyr_requirements(zephyr_dir)
 
 
 def get_zephyr_sdk(sdk_version):
@@ -240,3 +290,24 @@ def vsd_workspace_info():
 
     print("-----------------------")
     print(renode_version.decode().strip())
+
+
+class UpdateChoices(StrEnum):
+    ALL = "all"
+    ZEPHYR = "zephyr"
+    RESOURCES = "resources"
+
+
+@env.setup_env
+def vsd_update_workspace(component: Annotated[UpdateChoices, typer.Argument()] = UpdateChoices.ALL,
+                         zephyr_base: Optional[Path] = None,
+                         zephyr_sdk: str = "0.16.3"):
+    workspace = Path(env.get_workspace())
+
+    if component in [UpdateChoices.ALL, UpdateChoices.RESOURCES]:
+        update_vsd_resources(workspace)
+
+    if component in [UpdateChoices.ALL, UpdateChoices.ZEPHYR]:
+        zephyr_version = open(workspace / "visual-system-designer-resources/zephyr-data/zephyr.version").read().strip()
+        zephyr_dir = Path(env.get_var("ZEPHYR_BASE"))
+        update_zephyr(zephyr_dir, zephyr_version)

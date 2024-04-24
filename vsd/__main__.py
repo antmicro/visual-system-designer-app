@@ -12,7 +12,7 @@ from typing import Optional
 from vsd.build import prepare_zephyr_app
 from vsd.backend import start_vsd_app
 from vsd.simulate import simulate
-from vsd.init import init, vsd_workspace_info
+from vsd.init import init, vsd_update_workspace, vsd_workspace_info
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
 
@@ -25,6 +25,8 @@ app.command()(simulate)
 app.command("run")(start_vsd_app)
 
 app.command("info")(vsd_workspace_info)
+
+app.command("update")(vsd_update_workspace)
 
 
 @app.callback()
