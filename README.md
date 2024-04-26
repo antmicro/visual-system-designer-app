@@ -88,16 +88,64 @@ The build logs and Zephyr console output are available in dedicated terminals on
 
 ## Using VSD from command line
 
-VSD can be also used as a command line utility to execute each step of the application build process separately, without the need to start the VSD server.
-These commands can be used when you have obtained a graph from another source (e.g. from [designer.antmicro.com](https://designer.antmicro.com) or using `vsd run` command).
+VSD can also be used as a command line utility to prepare and simulate a demo on graph created with VSD.
+There are two available commands: `prepare-zephyr-app` and `simulate`.
+These commands process graph obtained earlier (e.g. from [designer.antmicro.com](https://designer.antmicro.com) or using `vsd run` command).
 
-Available commands:
+### `prepare-zephyr-app` command
 
-- `prepare-zephyr-board` -- prepare Zephyr board configuration based on given graph
-- `build-zephyr` -- build Zephyr for board of given name (previously prepared from graph)
-- `simulate` -- start simulation of prepared application
+This command is used to prepare and build Zephyr application for given board graph.
 
-To get more information about arguments and options for each command run it with `--help` option.
+```
+usage: vsd prepare-zephyr-app graph_file source_dir [--from-template template_dir] [--force]
+```
+
+It requires providing:
+
+* `graph_file` - file defining the VSD graph representing the design
+* `source_dir` - a directory where the Zephyr project is placed (or where the generated project from template should be placed)
+
+There are two possible options to provide application sources for this command:
+
+- `--from-template` - specify the directory which contains a template for the project
+- `--force` - specify the application template (by name or directory), which will be used to generate the application sources. Currently there is only one template available to use specifying its name: `blinky-temperature`.
+
+#### Example
+
+Few basic usage examples:
+
+- Building demo from sources:
+  ```
+  vsd prepare-zephyr-app demo/stm32-led-thermometer.json demo/blinky-temperature
+  ```
+- Building demo from template:
+  ```
+  vsd prepare-zephyr-app demo/stm32-led-thermometer.json ./my-project --from-template demo/templates/blinky-temperature/
+  ```
+
+### `simulate` command
+
+This command is used to start Renode simulation of the demo build in the previous step.
+The `board_name`, which has to be specified as an argument, is obtained from the graph name by substituting all white and special characters with underscore.
+The board name is also printed in the previous step.
+
+```
+usage: vsd simulate board_name
+```
+
+#### Example
+
+Firstly, building demo, e.g. from template as demonstrated in `prepare-zephyr-app`:
+
+```
+vsd prepare-zephyr-app demo/stm32-led-thermometer.json ./my-blinky --from-template demo/templates/blinky-temperature/
+```
+
+Secondly, run `vsd simulate` with board name, here:
+
+```
+vsd simulate demo_blinky_temp
+```
 
 ## Example application
 
@@ -107,9 +155,8 @@ To run that demo interactively you can start the VSD app, import the graph and r
 To prepare and run the demo in the shell execute following commands:
 
 ```
-vsd prepare-zephyr-board demo/stm32-led-thermometer.json
-vsd build-zephyr demo-blinky-temp --app-path demo/blinky-temperature
-vsd simulate demo-blinky-temp
+vsd prepare-zephyr-app demo/stm32-led-thermometer.json demo/blinky-temperature
+vsd simulate demo_blinky_temp
 ```
 
 ## Demo with frontend hosted on a remote server
@@ -138,7 +185,7 @@ pipeline_manager build server-app --communication-server-host localhost --commun
 
 The `--communication-server-host` and `--communication-server-port` specify the address from which the `vsd run` command will connect (from the user desktop perspective, hence `localhost` is sufficient).
 
-The `website` directory can now be served using any http server (e.g. the one included in Python3 distribution):
+The `website` directory can now be served using any HTTP server (e.g. the one included in Python3 distribution):
 
 ```sh
 python3 -m http.server -d ./website
@@ -151,10 +198,10 @@ Assuming the commands are executed in the root directory for this project:
 1. Prepare the workspace as described in [Setup](#setup).
 1. Start VSD app (the `--application <dir>` is the path to the sources for the Zephyr application)
     ```sh
-    vsd run --application demo/blinky-temperature
+    vsd run --app demo/blinky-temperature
     ```
 2. Go to address hosting Pipeline Manager (using above Python server go to http://localhost:8000).
-3. Use VSD as usual (e.g. load [`visual-system-designer-app/demo/stm32-led-thermometer.json`](visual-system-designer-app/demo/stm32-led-thermometer.json) and click "Run").
+3. Use VSD as usual (e.g. load [`visual-system-designer-app/demo/stm32-led-thermometer.json`](demo/stm32-led-thermometer.json) and click "Run").
 
 ## License
 
