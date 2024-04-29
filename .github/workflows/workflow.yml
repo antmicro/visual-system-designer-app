@@ -4,9 +4,9 @@ on: push
 jobs:
   validate-setup:
     name: Validate setup
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
@@ -28,11 +28,14 @@ jobs:
 
       - name: Build and run demo
         run: |
-          vsd prepare-zephyr-board demo/stm32-led-thermometer.json
-          vsd build-zephyr demo-blinky-temp
-          vsd prepare-renode-files demo-blinky-temp
-          timeout --signal=SIGINT 20 vsd simulate demo-blinky-temp || test $? -eq 124
+          vsd prepare-zephyr-app demo/stm32-led-thermometer.json demo/blinky-temperature
+          timeout --signal=SIGINT 20 vsd simulate demo_blinky_temp || test $? -eq 124
 
-      - uses: actions/upload-artifact@v3
+      - name: Build and run demo from template
+        run: |
+          vsd prepare-zephyr-app demo/stm32-led-thermometer.json blinky-from-template --from-template demo/templates/blinky-temperature --force
+          timeout --signal=SIGINT 20 vsd simulate demo_blinky_temp || test $? -eq 124
+
+      - uses: actions/upload-artifact@v4
         with:
-          path: workspace/builds/demo-blinky-temp
+          path: workspace/builds/demo_blinky_temp
