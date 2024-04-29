@@ -15,9 +15,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get -qqy update
-          sudo apt-get -qqy purge mono-complete mono-runtime mono-devel
           sudo apt-get -qqy autoremove
-          sudo apt-get -qqy install npm libarchive-tools curl git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev mono-complete=6.8.0.105+dfsg-2
+          sudo apt-get -qqy install npm libarchive-tools curl git cmake ninja-build gperf ccache dfu-util device-tree-compiler wget xz-utils file make gcc gcc-multilib g++-multilib libsdl2-dev
 
       - name: Prepare workspace
         run: |
