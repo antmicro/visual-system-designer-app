@@ -81,6 +81,7 @@ deploy:
 
     # This call to vsd init is needed to install Zephyr requirements
     vsd init workspace
+    vsd info
 
 
 
