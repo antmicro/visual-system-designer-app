@@ -15,6 +15,7 @@ from typing import Optional, Annotated
 from subprocess import CalledProcessError
 
 from vsd import env
+from vsd.utils import git_command, git_commit_sha
 
 
 def search_for_zephyr_base(workspace):
@@ -51,19 +52,11 @@ def get_vsd_resources(workspace):
         return
 
     logging.info(f"Cloning {url}")
-    ret = subprocess.run(["git", "clone", "-q", url, dest])
-    if ret.returncode != 0:
-        logging.error(f"Cloning VSD resources failed. (exitcode: {ret.returncode})")
-        exit(ret.returncode)
+    git_command(["clone", "-q", url, dest], error_msg="Cloning VSD resources failed")
 
 
 def check_for_modified_files(repo):
-    ret = subprocess.run(["git", "-C", str(repo), "diff-files", "--quiet"])
-    if ret.returncode != 0:
-        logging.error(
-            f"Some files in {repo} are modified. Please stash the changes before updating the repo."
-        )
-        exit(1)
+    git_command(["diff-files", "--quiet"], repo=repo, error_msg=f"Some files in {repo} are modified. Please stash the changes before updating the repo.")
 
 def update_vsd_resources(workspace):
     resources_repo = workspace / "visual-system-designer-resources"
@@ -73,21 +66,18 @@ def update_vsd_resources(workspace):
 
     logging.info("Trying to update visual-system-designer-resources repo. ")
     check_for_modified_files(resources_repo)
-    try:
-        subprocess.check_call(["git", "-C", str(resources_repo), "checkout", "main"])
-        subprocess.check_call(["git", "-C", str(resources_repo), "pull", "origin", "main"])
-    except CalledProcessError as e:
-        logging.error(f"Failed to update visual-system-designer-resources repository. (exitcode: {e.returncode})")
-        exit(1)
+    git_command(["checkout", "main"], repo=resources_repo, error_msg="Failed to update visual-system-designer-resources repository")
+    git_command(["pull", "origin", "main"], repo=resources_repo, error_msg="Failed to update visual-system-designer-resources repository")
 
 
 def install_zephyr_requirements(zephyr_base):
     zephyr_requirements = str(zephyr_base / "scripts/requirements.txt")
     logging.info(f"Installing Zephyr requirements from: {zephyr_requirements}")
-    ret = subprocess.run([sys.executable, "-m", "pip", "-q", "install", "-r", zephyr_requirements])
-    if ret.returncode != 0:
-        logging.error(f"Installing Zephyr Python requirements failed. (exitcode: {ret.returncode})")
-        exit(ret.returncode)
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "-q", "install", "-r", zephyr_requirements])
+    except CalledProcessError as e:
+        logging.error(f"Installing Zephyr Python requirements failed. (exitcode: {e.returncode})")
+        exit(e.returncode)
 
 
 def init_zephyr(workspace):
@@ -97,28 +87,25 @@ def init_zephyr(workspace):
     logging.info(f"Initializing Zephyr workspace in {workspace}")
 
     init_zephyr_sh = files("vsd.scripts") / "init_zephyr.sh"
-    ret = subprocess.run(["bash", str(init_zephyr_sh), str(workspace), zephyr_version])
-    if ret.returncode != 0:
-        logging.error(f"Zephyr initialization failed. (exitcode: {ret.returncode})")
-        exit(ret.returncode)
+    try:
+        subprocess.run(["bash", "--", str(init_zephyr_sh), str(workspace), zephyr_version])
+    except CalledProcessError as e:
+        logging.error(f"Zephyr initialization failed. (exitcode: {e.returncode})")
+        exit(e.returncode)
 
     return workspace / "zephyr"
 
 
 def update_zephyr(zephyr_dir, zephyr_version):
-    current_zephyr_version = subprocess.check_output(["git", "-C", str(zephyr_dir), "rev-parse", "HEAD"]).decode().strip()
+    current_zephyr_version = git_command(["rev-parse", "HEAD"], repo=zephyr_dir, output=True)
 
     if current_zephyr_version == zephyr_version:
         return
 
     logging.info(f"Updating Zephyr to {zephyr_version}")
     check_for_modified_files(zephyr_dir)
-    try:
-        subprocess.check_call(["git", "-C", str(zephyr_dir), "fetch", "--depth=1", "origin", zephyr_version])
-        subprocess.check_call(["git", "-C", str(zephyr_dir), "checkout", "FETCH_HEAD"])
-    except CalledProcessError as e:
-        logging.error(f"Failed to update Zephyr repository. (exitcode: {e.returncode})")
-        exit(e.returncode)
+    git_command(["fetch", "--depth=1", "origin", zephyr_version], repo=zephyr_dir, error_msg="Failed to update Zephyr repository")
+    git_command(["checkout", "FETCH_HEAD"], repo=zephyr_dir, error_msg="Failed to update Zephyr repository")
 
     logging.info("Updating west workspace")
     try:
@@ -150,10 +137,11 @@ def get_zephyr_sdk(sdk_version):
     os.makedirs(sdk_install_dir, exist_ok=True)
 
     get_zephyr_sdk_sh = files("vsd.scripts") / "get_zephyr_sdk.sh"
-    ret = subprocess.run(["bash", str(get_zephyr_sdk_sh), str(sdk_version), str(sdk_install_dir)])
-    if ret.returncode != 0:
-        logging.error(f"Installing Zephyr SDK failed. (exitcode: {ret.returncode})")
-        exit(ret.returncode)
+    try:
+        subprocess.check_call(["bash", "--", str(get_zephyr_sdk_sh), str(sdk_version), str(sdk_install_dir)])
+    except CalledProcessError as e:
+        logging.error(f"Installing Zephyr SDK failed. (exitcode: {e.returncode})")
+        exit(e.returncode)
     return sdk_install_dir
 
 
@@ -166,10 +154,11 @@ def build_pipeline_manager(workspace):
         "--assets-directory", workspace / "visual-system-designer-resources/assets",
         "--favicon-path", workspace / "visual-system-designer-resources/assets/visual-system-designer.svg",
     )
-    ret = subprocess.run(pipeline_manager_build_cmd)
-    if ret.returncode != 0:
-        logging.error(f"Pipeline manager frontend build failed. (exitcode: {ret.returncode})")
-        exit(ret.returncode)
+    try:
+        subprocess.check_call(pipeline_manager_build_cmd)
+    except CalledProcessError as e:
+        logging.error(f"Pipeline manager frontend build failed. (exitcode: {e.returncode})")
+        exit(e.returncode)
 
 
 def get_renode_portable(workspace):
@@ -271,10 +260,6 @@ def vsd_workspace_info():
     for k,v in env.get_env().items():
         print(f"{k:<{max_len}}: {v}")
 
-    def git_commit_sha(dir):
-        output = subprocess.check_output(["git", "-C", str(dir), "rev-parse", "HEAD"])
-        return output.decode().strip()
-
     print("-----------------------")
     print(f"       Zephyr commit: {git_commit_sha(env.get_var('ZEPHYR_BASE'))}")
     print(f"VSD resources commit: {git_commit_sha(workspace / 'visual-system-designer-resources')}")
@@ -282,7 +267,7 @@ def vsd_workspace_info():
     try:
         renode_version = subprocess.check_output([env.get_var("PYRENODE_BIN"), "--version"])
     except CalledProcessError as e:
-        logging.error(f"Failed to get Renode version (errorcode: {e.returncode})")
+        logging.error(f"Failed to get Renode version (exitcode: {e.returncode})")
         sys.exit(e.returncode)
     except Exception as e:
         logging.error(f"Failed to run `renode --version` command: {e}")
