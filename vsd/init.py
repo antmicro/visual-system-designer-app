@@ -77,7 +77,7 @@ def install_zephyr_requirements(zephyr_base):
         subprocess.check_call([sys.executable, "-m", "pip", "-q", "install", "-r", zephyr_requirements])
     except CalledProcessError as e:
         logging.error(f"Installing Zephyr Python requirements failed. (exitcode: {e.returncode})")
-        exit(e.returncode)
+        sys.exit(e.returncode)
 
 
 def init_zephyr(workspace):
@@ -91,7 +91,7 @@ def init_zephyr(workspace):
         subprocess.run(["bash", "--", str(init_zephyr_sh), str(workspace), zephyr_version])
     except CalledProcessError as e:
         logging.error(f"Zephyr initialization failed. (exitcode: {e.returncode})")
-        exit(e.returncode)
+        sys.exit(e.returncode)
 
     return workspace / "zephyr"
 
@@ -112,9 +112,7 @@ def update_zephyr(zephyr_dir, zephyr_version):
         subprocess.check_call(["west", "update"], cwd=zephyr_dir)
     except CalledProcessError as e:
         logging.error(f"Failed to update west workspace. (exitcode: {e.returncode})")
-        exit(e.returncode)
-
-    install_zephyr_requirements(zephyr_dir)
+        sys.exit(e.returncode)
 
 
 def get_zephyr_sdk(sdk_version):
@@ -141,7 +139,7 @@ def get_zephyr_sdk(sdk_version):
         subprocess.check_call(["bash", "--", str(get_zephyr_sdk_sh), str(sdk_version), str(sdk_install_dir)])
     except CalledProcessError as e:
         logging.error(f"Installing Zephyr SDK failed. (exitcode: {e.returncode})")
-        exit(e.returncode)
+        sys.exit(e.returncode)
     return sdk_install_dir
 
 
@@ -158,7 +156,7 @@ def build_pipeline_manager(workspace):
         subprocess.check_call(pipeline_manager_build_cmd)
     except CalledProcessError as e:
         logging.error(f"Pipeline manager frontend build failed. (exitcode: {e.returncode})")
-        exit(e.returncode)
+        sys.exit(e.returncode)
 
 
 def get_renode_portable(workspace):
@@ -183,7 +181,7 @@ def get_renode_portable(workspace):
 
     if not renode_portable.exists():
         logging.error("Renode portable wasn't downloaded.")
-        exit(1)
+        sys.exit(1)
 
     return renode_portable
 
@@ -201,7 +199,7 @@ def init(dir: Annotated[Path, typer.Argument()] = ".",
                 f"The VSD workspace is already initialized in {env_ws}.\n"
                 "If you want to initialize new workspace please unset VSD_WORKSPACE variable."
             )
-            exit(1)
+            sys.exit(1)
 
     workspace = dir.resolve()
     zephyr_base = zephyr_base or search_for_zephyr_base(workspace)

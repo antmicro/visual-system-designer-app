@@ -3,6 +3,7 @@
 
 import logging
 import os
+import sys
 import yaml
 
 from functools import wraps
@@ -37,7 +38,7 @@ def setup_vsd_env():
             f"Can't find {workspace / 'vsd-env.yml'}. Have you initilized VSD workspace?\n"
             "Run `vsd init [workspace dir]` or export VSD_WORKSPACE dir with intialized workspace."
         )
-        exit(1)
+        sys.exit(1)
 
     # Set environ variables defined in vsd-env.yml
     with open(workspace / "vsd-env.yml") as f:
@@ -66,7 +67,7 @@ def _vsd_env_not_found_err():
         "VSD environment not found.\n"
         "Consider calling vsd.env.setup_vsd_env() or decorate your current function with vsd.env.setup_env"
     )
-    exit(1)
+    sys.exit(1)
 
 
 def get_workspace():
