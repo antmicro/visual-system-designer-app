@@ -120,7 +120,7 @@ def get_zephyr_sdk(sdk_version):
     sdk_install_dir = Path(os.environ.get("ZEPHYR_SDK_INSTALL_DIR", home / f"zephyr-sdk-{sdk_version}"))
 
     def read_sdk_version(dir):
-        return open(dir / "sdk_version").read().strip()
+        return (dir / "sdk_version").read_text().strip()
 
     # If we have correct SDK version we don't need to install it again
     if sdk_install_dir.exists() and sdk_version == read_sdk_version(sdk_install_dir):
@@ -291,6 +291,6 @@ def vsd_update_workspace(component: Annotated[UpdateChoices, typer.Argument()] =
         update_vsd_resources(workspace)
 
     if component in [UpdateChoices.ALL, UpdateChoices.ZEPHYR]:
-        zephyr_version = open(workspace / "visual-system-designer-resources/zephyr-data/zephyr.version").read().strip()
+        zephyr_version = (workspace / "visual-system-designer-resources/zephyr-data/zephyr.version").read_text().strip()
         zephyr_dir = Path(env.get_var("ZEPHYR_BASE"))
         update_zephyr(zephyr_dir, zephyr_version)
