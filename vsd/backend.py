@@ -583,5 +583,5 @@ def start_vsd_app(app: Path = None,
     atexit.register(wait_for_pm)
     sleep(0.5)
 
-    # XXX: This function won't return.
+    # NOTE: This function won't return.
     start_vsd_backend(vsd_backend_host, vsd_backend_port, workspace, app_path, app_type, spec_mod)
