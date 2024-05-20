@@ -155,8 +155,8 @@
                 ],
                 "properties": [],
                 "enabledInterfaceGroups": [],
-                "name": "stm32l053r8t6",
-                "instanceName": "stm32l053r8t6"
+                "name": "stm32l053xx",
+                "instanceName": "stm32l053xx"
             },
             {
                 "id": "50393e0a-bfd9-46c3-bd54-c32ce0288a86",
